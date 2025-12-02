@@ -50,14 +50,19 @@
           <div class="muted">Status</div>
           <div id="statusText">Not connected</div>
         </div>
+
+        <!-- Address first -->
         <div class="stat">
           <div class="muted">Address</div>
           <div id="walletAddress" class="mono">—</div>
         </div>
+
+        <!-- User ID next to address -->
         <div class="stat">
           <div class="muted">User ID</div>
           <div id="userId" class="mono">-</div>
         </div>
+
         <div class="stat">
           <div class="muted">Network</div>
           <div id="walletNetwork">—</div>
@@ -68,7 +73,7 @@
         </div>
       </div>
 
-      <!-- name input REMOVED and replaced by User ID above -->
+      <!-- Name input removed completely -->
 
       <div style="margin-top:18px">
         <h3 class="muted">Tokens</h3>
@@ -114,7 +119,6 @@ function getOrCreateUserIdFor(address) {
     id = uuidv4();
     localStorage.setItem(key, id);
     console.log('Created userId', id, 'for', address);
-    // Optional: send to backend to persist across devices (with signature verification ideally)
   } else {
     console.log('Loaded userId from localStorage', id);
   }
@@ -343,12 +347,10 @@ async function connectFlow() {
           if (!accounts || !accounts.length) {
             clearSessionUI();
           } else {
-            // refresh session for the new account
             const newAddr = accounts[0].toLowerCase();
             const uid = getOrCreateUserIdFor(newAddr);
             setWalletInfo(newAddr, walletNetworkEl.textContent || "BSC (56)", walletBalanceEl.textContent || "—");
             setUserIdUI(uid);
-            // optionally notify backend of switch
             notifyBackend(newAddr, "BSC (56)", uid);
           }
         });
@@ -375,7 +377,6 @@ document.addEventListener('DOMContentLoaded', async () => {
       const accounts = await window.ethereum.request({ method: 'eth_accounts' });
       if (accounts && accounts.length) {
         const address = accounts[0].toLowerCase();
-        // fill UI quickly
         setStatus("Restoring session…");
         const balanceWei = await (new Web3(window.ethereum)).eth.getBalance(address);
         const balanceBNB = Number(Web3.utils.fromWei(balanceWei + "", "ether"));
@@ -400,3 +401,4 @@ document.addEventListener('DOMContentLoaded', async () => {
 </script>
 </body>
 </html>
+
