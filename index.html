@@ -260,7 +260,6 @@ async function switchToBSC(providerInstance) {
 
 
 /* --- Replace your initWeb3Modal() and DOMContentLoaded block with this --- */
-
 let web3Modal, web3, provider;
 
 function initWeb3Modal() {
@@ -270,9 +269,9 @@ function initWeb3Modal() {
       options: { rpc: { 56: "https://bsc-dataseed.binance.org" }, bridge: "https://bridge.walletconnect.org", qrcode: true }
     }
   };
-  // enable cacheProvider so WalletConnect sessions persist across reloads
   web3Modal = new window.Web3Modal.default({ cacheProvider: true, providerOptions });
 }
+
 
 // helper to attach standard provider event listeners (so auto-restored providers behave same)
 function attachProviderListeners(p) {
