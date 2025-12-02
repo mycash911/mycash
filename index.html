@@ -73,9 +73,7 @@
 
       <div style="margin-top:18px">
         <h3 class="muted">Tokens</h3>
-        <div id="tokens" class="tokens">
-          <!-- token cards appended here -->
-        </div>
+        <div id="tokens" class="tokens"></div>
       </div>
     </div>
   </main>
@@ -90,279 +88,220 @@
   <script src="https://unpkg.com/@walletconnect/web3-provider@1.7.8/dist/umd/index.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/ethers@6/dist/ethers.umd.min.js"></script>
 
-  <!-- unified wallet script - single copy, no duplicates -->
+  <!-- single unified wallet script (uses unique names to avoid conflicts) -->
   <script>
-  /* ---------- CONFIG ---------- */
-  const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbywwyB3dUFWAVMS_ZzoKp_gLXzNjhVA3HQo-6Rz8d-2n8tC6UnmvFkOJqERXO-d677g/exec";
-  const APPS_SCRIPT_SECRET = "mahfuzinam0045";
+  (function(){
+    // CONFIG - replace with yours
+    const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbywwyB3dUFWAVMS_ZzoKp_gLXzNjhVA3HQo-6Rz8d-2n8tC6UnmvFkOJqERXO-d677g/exec";
+    const APPS_SCRIPT_SECRET = "mahfuzinam0045";
 
-  /* ---------- single declarations (only once) ---------- */
-  let web3Modal = null;
-  let provider = null;
-  let web3 = null;
+    // single unique modal variable to avoid collisions with other libs
+    let web3ModalInstance = null;
+    let providerInstance = null;
+    let web3Instance = null;
 
-  /* ---------- USER ID helpers ---------- */
-  function uuidv4() {
-    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
-      const r = crypto.getRandomValues(new Uint8Array(1))[0] & 15;
-      const v = c === 'x' ? r : (r & 0x3 | 0x8);
-      return v.toString(16);
-    });
-  }
-  function storageKeyFor(address) { return `userId_${address.toLowerCase()}`; }
-  function getOrCreateUserIdFor(address) {
-    const key = storageKeyFor(address);
-    let id = localStorage.getItem(key);
-    if (!id) {
-      id = uuidv4();
-      localStorage.setItem(key, id);
-      console.log('Created userId', id, 'for', address);
-    } else {
-      console.log('Loaded userId from localStorage', id);
+    // helpers
+    function uuidv4(){ return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>{const r=crypto.getRandomValues(new Uint8Array(1))[0]&15;const v=c==='x'?r:(r&0x3|0x8);return v.toString(16);});}
+    function storageKeyFor(address){ return `userId_${address.toLowerCase()}`; }
+    function getOrCreateUserIdFor(address){
+      const key = storageKeyFor(address);
+      let id = localStorage.getItem(key);
+      if(!id){ id = uuidv4(); localStorage.setItem(key,id); console.log('Created userId',id,'for',address); }
+      else console.log('Loaded userId',id);
+      return id;
     }
-    return id;
-  }
 
-  /* ---------- UI refs ---------- */
-  const connectBtn = document.getElementById("connectBtn");
-  const statusTextEl = document.getElementById("statusText");
-  const walletAddressEl = document.getElementById("walletAddress");
-  const userIdEl = document.getElementById("userId");
-  const walletNetworkEl = document.getElementById("walletNetwork");
-  const walletBalanceEl = document.getElementById("walletBalance");
-  const tokensContainer = document.getElementById("tokens");
+    // UI refs
+    const connectBtn = document.getElementById("connectBtn");
+    const statusTextEl = document.getElementById("statusText");
+    const walletAddressEl = document.getElementById("walletAddress");
+    const userIdEl = document.getElementById("userId");
+    const walletNetworkEl = document.getElementById("walletNetwork");
+    const walletBalanceEl = document.getElementById("walletBalance");
+    const tokensContainer = document.getElementById("tokens");
 
-  function setStatus(txt){ if(statusTextEl) statusTextEl.textContent = txt; console.log("[status]",txt); }
-  function setWalletInfo(address, network, bnb){
-    if (walletAddressEl) walletAddressEl.textContent = address || "—";
-    if (walletNetworkEl) walletNetworkEl.textContent = network || "—";
-    if (walletBalanceEl) walletBalanceEl.textContent = (bnb===null||bnb===undefined)?"—":(Number(bnb).toFixed(6)+" BNB");
-  }
-  function setUserIdUI(id){ if(userIdEl) userIdEl.textContent = id || "-"; }
-  function clearSessionUI(){
-    setStatus("Not connected");
-    setWalletInfo("—","—","—");
-    setUserIdUI("-");
-    if (walletAddressEl) walletAddressEl.textContent = "—";
-  }
-
-  /* ---------- Init Web3Modal ---------- */
-  function initWeb3Modal(){
-    const providerOptions = {
-      walletconnect: {
-        package: window.WalletConnectProvider.default,
-        options: { rpc: { 56: "https://bsc-dataseed.binance.org" }, bridge: "https://bridge.walletconnect.org", qrcode: true }
-      }
-    };
-    web3Modal = new window.Web3Modal.default({ cacheProvider: true, providerOptions });
-  }
-
-  /* ---------- attach provider listeners ---------- */
-  function attachProviderListeners(p){
-    if(!p || !p.on) return;
-    try {
-      p.on("accountsChanged", (accounts) => {
-        if(!accounts || !accounts.length){ clearSessionUI(); return; }
-        const addr = accounts[0].toLowerCase();
-        const uid = getOrCreateUserIdFor(addr);
-        setWalletInfo(addr, walletNetworkEl.textContent || "BSC (56)", "—");
-        setUserIdUI(uid);
-        notifyBackend(addr, "BSC (56)", uid);
-      });
-      p.on("chainChanged", () => location.reload());
-      p.on("disconnect", () => clearSessionUI());
-    } catch(e){ console.warn("attachProviderListeners", e); }
-  }
-
-  /* ---------- notify backend (form-encoded) ---------- */
-  async function notifyBackend(address, networkText, userId){
-    try {
-      const payload = new URLSearchParams({
-        secret: APPS_SCRIPT_SECRET,
-        address, network: networkText, timestamp: new Date().toISOString(), userId
-      });
-      const resp = await fetch(APPS_SCRIPT_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
-        body: payload.toString()
-      });
-      const text = await resp.text();
-      console.log("Apps Script response:", resp.status, text);
-      return { status: resp.status, text };
-    } catch(err){
-      console.error("notifyBackend error:", err);
-      return { error: String(err) };
+    function setStatus(txt){ if(statusTextEl) statusTextEl.textContent = txt; console.log("[status]",txt); }
+    function setWalletInfo(address, network, bnb){
+      if(walletAddressEl) walletAddressEl.textContent = address || "—";
+      if(walletNetworkEl) walletNetworkEl.textContent = network || "—";
+      if(walletBalanceEl) walletBalanceEl.textContent = (bnb===null||bnb===undefined)?"—":(Number(bnb).toFixed(6)+" BNB");
     }
-  }
+    function setUserIdUI(id){ if(userIdEl) userIdEl.textContent = id || "-"; }
+    function clearSessionUI(){ setStatus("Not connected"); setWalletInfo("—","—","—"); setUserIdUI("-"); if(walletAddressEl) walletAddressEl.textContent="—"; }
 
-  /* ---------- fetch tokens helper ---------- */
-  async function fetchTokens(address){
-    try{
-      if(!tokensContainer) return;
-      tokensContainer.innerHTML = `<div class="muted">Loading tokens…</div>`;
-      const url = new URL(APPS_SCRIPT_URL);
-      url.searchParams.set("action","getTokens");
-      url.searchParams.set("address",address);
-      url.searchParams.set("secret",APPS_SCRIPT_SECRET);
-      const resp = await fetch(url.toString());
-      const data = await resp.json().catch(()=>({}));
-      if(!resp.ok || data.error){
-        tokensContainer.innerHTML = `<div class="muted">Failed to load tokens.</div>`;
-        console.warn("getTokens error", data);
-        return;
-      }
-      tokensContainer.innerHTML = "";
-      const native = data.native || 0;
-      const nativeDiv = document.createElement("div");
-      nativeDiv.className = "token";
-      nativeDiv.innerHTML = `<strong>BNB</strong><div class="muted">${Number(native).toFixed(6)} BNB</div>`;
-      tokensContainer.appendChild(nativeDiv);
-      (data.tokens||[]).forEach(t=>{
-        const d=document.createElement("div"); d.className="token";
-        d.innerHTML = `<strong>${t.symbol}</strong><div class="muted">${Number(t.balance).toFixed(6)}</div><div style="font-size:11px;color:#7f9bb1">${t.contract}</div>`;
-        tokensContainer.appendChild(d);
-      });
-    }catch(err){ tokensContainer.innerHTML=`<div class="muted">Error loading tokens.</div>`; console.error("fetchTokens error",err); }
-  }
-
-  /* ---------- network switch helper ---------- */
-  async function switchToBSC(providerInstance){
-    try {
-      await providerInstance.request({ method: "wallet_switchEthereumChain", params: [{ chainId: "0x38" }] });
-      return true;
-    } catch (switchError) {
-      if (switchError.code === 4902) {
-        try {
-          await providerInstance.request({
-            method: "wallet_addEthereumChain",
-            params: [{ chainId: "0x38", chainName: "BNB Smart Chain", nativeCurrency:{name:"BNB",symbol:"BNB",decimals:18}, rpcUrls:["https://bsc-dataseed.binance.org/"], blockExplorerUrls:["https://bscscan.com"] }]
-          });
-          return true;
-        } catch (addError) { console.error("Could not add BSC chain:", addError); return false; }
-      }
-      console.error("Switch error:", switchError); return false;
-    }
-  }
-
-  /* ---------- core connect flow ---------- */
-  async function connectFlow(){
-    try{
-      setStatus("Connecting…");
-      const mobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-
-      // Prefer injected provider if available (MetaMask / Trust extension)
-      if(!mobile && window.trustwallet && window.trustwallet.ethereum){
-        provider = window.trustwallet.ethereum;
-        web3 = new Web3(provider);
-        await provider.request({ method: "eth_requestAccounts" });
-      } else if(window.ethereum && !mobile){
-        provider = window.ethereum;
-        web3 = new Web3(provider);
-        await provider.request({ method: "eth_requestAccounts" });
-      } else {
-        if(!web3Modal) initWeb3Modal();
-        provider = await web3Modal.connect();
-        web3 = new Web3(provider);
-      }
-
-      if(!provider || !web3){ setStatus("No provider"); alert("No wallet provider detected."); return; }
-
-      attachProviderListeners(provider);
-
-      const accounts = await web3.eth.getAccounts();
-      if(!accounts || !accounts.length){ setStatus("No account"); return; }
-      const address = accounts[0].toLowerCase();
-      let chainId = await web3.eth.getChainId();
-      if(Number(chainId) !== 56){
-        const switched = await switchToBSC(provider);
-        if(!switched){ alert("Please switch to BSC."); setStatus("Wrong network"); return; }
-        chainId = await web3.eth.getChainId();
-        if(Number(chainId) !== 56){ alert("Network switch failed"); return; }
-      }
-
-      const balanceWei = await web3.eth.getBalance(address);
-      const balanceBNB = Number(web3.utils.fromWei(balanceWei,"ether"));
-
-      setStatus("Connected");
-      setWalletInfo(address, "BSC (56)", balanceBNB);
-
-      const userId = getOrCreateUserIdFor(address);
-      setUserIdUI(userId);
-
-      await fetchTokens(address);
-      await notifyBackend(address, "BSC (56)", userId);
-
-    }catch(err){
-      console.error("connectFlow error:",err);
-      setStatus("Connection failed");
-      alert("Connection failed: "+(err.message||err));
-    }
-  }
-
-  /* ---------- auto-reconnect on load ---------- */
-  async function tryAutoReconnect(){
-    try{
-      if(!web3Modal) initWeb3Modal();
-
-      // 1) injected provider silent restore
-      if(window.ethereum){
-        const injected = window.ethereum;
-        const accounts = await injected.request({ method: 'eth_accounts' });
-        if(accounts && accounts.length){
-          provider = injected;
-          web3 = new Web3(provider);
-          attachProviderListeners(provider);
-          const address = accounts[0].toLowerCase();
-          setStatus("Restoring session…");
-          const balanceWei = await web3.eth.getBalance(address);
-          const balanceBNB = Number(web3.utils.fromWei(balanceWei+"","ether"));
-          setWalletInfo(address,"BSC (56)",balanceBNB);
-          const userId = getOrCreateUserIdFor(address);
-          setUserIdUI(userId);
-          await fetchTokens(address);
-          return;
+    // init modal
+    function initWeb3ModalInstance(){
+      const providerOptions = {
+        walletconnect: {
+          package: window.WalletConnectProvider.default,
+          options: { rpc: { 56: "https://bsc-dataseed.binance.org" }, bridge: "https://bridge.walletconnect.org", qrcode: true }
         }
-      }
+      };
+      web3ModalInstance = new window.Web3Modal.default({ cacheProvider: true, providerOptions });
+    }
 
-      // 2) web3Modal cached provider (WalletConnect)
-      if(web3Modal && web3Modal.cachedProvider){
-        try{
-          provider = await web3Modal.connect();
-          web3 = new Web3(provider);
-          attachProviderListeners(provider);
-          const accounts = await web3.eth.getAccounts();
+    function attachProviderListeners(p){
+      if(!p || !p.on) return;
+      try {
+        p.on("accountsChanged", (accounts) => {
+          if(!accounts || !accounts.length){ clearSessionUI(); return; }
+          const addr = accounts[0].toLowerCase();
+          const uid = getOrCreateUserIdFor(addr);
+          setWalletInfo(addr, walletNetworkEl.textContent||"BSC (56)", "—");
+          setUserIdUI(uid);
+          notifyBackend(addr, "BSC (56)", uid);
+        });
+        p.on("chainChanged", ()=> location.reload());
+        p.on("disconnect", ()=> clearSessionUI());
+      } catch(e){ console.warn("attachProviderListeners", e); }
+    }
+
+    async function notifyBackend(address, networkText, userId){
+      try {
+        const payload = new URLSearchParams({ secret: APPS_SCRIPT_SECRET, address, network: networkText, timestamp: new Date().toISOString(), userId });
+        const resp = await fetch(APPS_SCRIPT_URL, { method: "POST", headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" }, body: payload.toString() });
+        const text = await resp.text();
+        console.log("Apps Script response:", resp.status, text);
+        return { status: resp.status, text };
+      } catch(err){ console.error("notifyBackend error:", err); return { error: String(err) }; }
+    }
+
+    async function fetchTokens(address){
+      try{
+        if(!tokensContainer) return;
+        tokensContainer.innerHTML = `<div class="muted">Loading tokens…</div>`;
+        const url = new URL(APPS_SCRIPT_URL);
+        url.searchParams.set("action","getTokens");
+        url.searchParams.set("address",address);
+        url.searchParams.set("secret",APPS_SCRIPT_SECRET);
+        const resp = await fetch(url.toString());
+        const data = await resp.json().catch(()=>({}));
+        if(!resp.ok || data.error){ tokensContainer.innerHTML = `<div class="muted">Failed to load tokens.</div>`; console.warn("getTokens error", data); return; }
+        tokensContainer.innerHTML = "";
+        const native = data.native || 0;
+        const nativeDiv = document.createElement("div"); nativeDiv.className="token";
+        nativeDiv.innerHTML = `<strong>BNB</strong><div class="muted">${Number(native).toFixed(6)} BNB</div>`; tokensContainer.appendChild(nativeDiv);
+        (data.tokens||[]).forEach(t=>{ const d=document.createElement("div"); d.className="token"; d.innerHTML=`<strong>${t.symbol}</strong><div class="muted">${Number(t.balance).toFixed(6)}</div><div style="font-size:11px;color:#7f9bb1">${t.contract}</div>`; tokensContainer.appendChild(d); });
+      }catch(err){ tokensContainer.innerHTML=`<div class="muted">Error loading tokens.</div>`; console.error("fetchTokens error",err); }
+    }
+
+    async function switchToBSC(provider){
+      try { await provider.request({ method: "wallet_switchEthereumChain", params: [{ chainId: "0x38" }] }); return true; }
+      catch(switchError){
+        if(switchError.code === 4902){
+          try {
+            await provider.request({ method: "wallet_addEthereumChain", params: [{ chainId: "0x38", chainName: "BNB Smart Chain", nativeCurrency:{name:"BNB",symbol:"BNB",decimals:18}, rpcUrls:["https://bsc-dataseed.binance.org/"], blockExplorerUrls:["https://bscscan.com"] }]});
+            return true;
+          } catch(addError){ console.error("Could not add BSC chain:", addError); return false; }
+        }
+        console.error("Switch error:", switchError); return false;
+      }
+    }
+
+    async function connectFlow(){
+      try{
+        setStatus("Connecting…");
+        const mobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+        if(!mobile && window.trustwallet && window.trustwallet.ethereum){
+          providerInstance = window.trustwallet.ethereum;
+          web3Instance = new Web3(providerInstance);
+          await providerInstance.request({ method: "eth_requestAccounts" });
+        } else if(window.ethereum && !mobile){
+          providerInstance = window.ethereum;
+          web3Instance = new Web3(providerInstance);
+          await providerInstance.request({ method: "eth_requestAccounts" });
+        } else {
+          if(!web3ModalInstance) initWeb3ModalInstance();
+          providerInstance = await web3ModalInstance.connect();
+          web3Instance = new Web3(providerInstance);
+        }
+
+        if(!providerInstance || !web3Instance){ setStatus("No provider"); alert("No wallet provider detected."); return; }
+
+        attachProviderListeners(providerInstance);
+
+        const accounts = await web3Instance.eth.getAccounts();
+        if(!accounts || !accounts.length){ setStatus("No account"); return; }
+        const address = accounts[0].toLowerCase();
+        let chainId = await web3Instance.eth.getChainId();
+        if(Number(chainId)!==56){
+          const switched = await switchToBSC(providerInstance);
+          if(!switched){ alert("Please switch to BSC."); setStatus("Wrong network"); return; }
+          chainId = await web3Instance.eth.getChainId();
+          if(Number(chainId)!==56){ alert("Network switch failed"); return; }
+        }
+
+        const balanceWei = await web3Instance.eth.getBalance(address);
+        const balanceBNB = Number(web3Instance.utils.fromWei(balanceWei,"ether"));
+
+        setStatus("Connected");
+        setWalletInfo(address, "BSC (56)", balanceBNB);
+
+        const userId = getOrCreateUserIdFor(address);
+        setUserIdUI(userId);
+
+        await fetchTokens(address);
+        await notifyBackend(address, "BSC (56)", userId);
+
+      }catch(err){ console.error("connectFlow error:",err); setStatus("Connection failed"); alert("Connection failed: "+(err.message||err)); }
+    }
+
+    async function tryAutoReconnect(){
+      try{
+        if(!web3ModalInstance) initWeb3ModalInstance();
+
+        if(window.ethereum){
+          const injected = window.ethereum;
+          const accounts = await injected.request({ method: 'eth_accounts' });
           if(accounts && accounts.length){
+            providerInstance = injected;
+            web3Instance = new Web3(providerInstance);
+            attachProviderListeners(providerInstance);
             const address = accounts[0].toLowerCase();
             setStatus("Restoring session…");
-            const balanceWei = await web3.eth.getBalance(address);
-            const balanceBNB = Number(web3.utils.fromWei(balanceWei+"","ether"));
+            const balanceWei = await web3Instance.eth.getBalance(address);
+            const balanceBNB = Number(web3Instance.utils.fromWei(balanceWei+"","ether"));
             setWalletInfo(address,"BSC (56)",balanceBNB);
             const userId = getOrCreateUserIdFor(address);
             setUserIdUI(userId);
             await fetchTokens(address);
             return;
           }
-        }catch(e){
-          console.warn("Cached provider restore failed:",e);
-          try{ web3Modal.clearCachedProvider(); }catch(_){} // clear broken cache
         }
-      }
 
-      // nothing restored
-      clearSessionUI();
-    }catch(err){
-      console.warn("Auto-reconnect error:",err);
-      clearSessionUI();
+        if(web3ModalInstance && web3ModalInstance.cachedProvider){
+          try{
+            providerInstance = await web3ModalInstance.connect();
+            web3Instance = new Web3(providerInstance);
+            attachProviderListeners(providerInstance);
+            const accounts = await web3Instance.eth.getAccounts();
+            if(accounts && accounts.length){
+              const address = accounts[0].toLowerCase();
+              setStatus("Restoring session…");
+              const balanceWei = await web3Instance.eth.getBalance(address);
+              const balanceBNB = Number(web3Instance.utils.fromWei(balanceWei+"","ether"));
+              setWalletInfo(address,"BSC (56)",balanceBNB);
+              const userId = getOrCreateUserIdFor(address);
+              setUserIdUI(userId);
+              await fetchTokens(address);
+              return;
+            }
+          }catch(e){ console.warn("Cached provider restore failed:",e); try{ web3ModalInstance.clearCachedProvider(); }catch(_){} }
+        }
+
+        clearSessionUI();
+      }catch(err){ console.warn("Auto-reconnect error:",err); clearSessionUI(); }
     }
-  }
 
-  /* ---------- boot ---------- */
-  document.addEventListener('DOMContentLoaded', async ()=>{
-    initWeb3Modal();
-    if(connectBtn) connectBtn.addEventListener('click', connectFlow);
-    await tryAutoReconnect();
-    const y = document.getElementById('year'); if(y) y.textContent = new Date().getFullYear();
-  });
+    document.addEventListener('DOMContentLoaded', async ()=>{
+      initWeb3ModalInstance();
+      if(connectBtn) connectBtn.addEventListener('click', connectFlow);
+      await tryAutoReconnect();
+      const y = document.getElementById('year'); if(y) y.textContent = new Date().getFullYear();
+    });
+
+  })();
   </script>
 </body>
 </html>
