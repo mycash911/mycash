@@ -24,6 +24,7 @@
     input{padding:8px;border-radius:8px;border:1px solid #123044;background:#041525;color:#e6eef8}
     button{cursor:pointer}
     .small { font-size:0.9rem; color:#9fb0c8; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", "Helvetica Neue", monospace; }
   </style>
 </head>
 <body>
@@ -51,7 +52,11 @@
         </div>
         <div class="stat">
           <div class="muted">Address</div>
-          <div id="walletAddress">—</div>
+          <div id="walletAddress" class="mono">—</div>
+        </div>
+        <div class="stat">
+          <div class="muted">User ID</div>
+          <div id="userId" class="mono">-</div>
         </div>
         <div class="stat">
           <div class="muted">Network</div>
@@ -63,11 +68,7 @@
         </div>
       </div>
 
-      <div style="margin-top:12px">
-        <label class="muted">Name (optional)</label><br/>
-        <input id="userName" placeholder="Your name"/>
-        <button id="saveNameBtn" style="margin-left:8px;padding:8px 12px">Save</button>
-      </div>
+      <!-- name input REMOVED and replaced by User ID above -->
 
       <div style="margin-top:18px">
         <h3 class="muted">Tokens</h3>
@@ -86,24 +87,18 @@
   <script src="https://unpkg.com/web3@1.2.11/dist/web3.min.js"></script>
   <script src="https://unpkg.com/web3modal@1.9.0/dist/index.js"></script>
   <script src="https://unpkg.com/@walletconnect/web3-provider@1.7.8/dist/umd/index.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@6/dist/ethers.umd.min.js"></script>
 
- <!-- ===== TRUST-WALLET-ONLY CONNECT SCRIPT (DROP-IN) ===== -->
-<!-- Requires web3, web3modal and @walletconnect/web3-provider libs loaded above -->
-
-
-<!-- include ethers if you use it; optional -->
-<script src="https://cdn.jsdelivr.net/npm/ethers@6/dist/ethers.umd.min.js"></script>
 <script>
-/**
- * Minimal wallet connect + persistent userId example.
- * - Generates a random userId (UUID v4) on first connect.
- * - Saves mapping in localStorage under key `userId_<lowercaseAddress>`
- * - Attempts auto-reconnect on page load by checking eth_accounts.
- *
- * NOTE: This does NOT store private keys. userId is public/non-sensitive.
- */
+/* -------------------------
+   CONFIG
+   Replace APPS_SCRIPT_URL and APPS_SCRIPT_SECRET with your values.
+   ------------------------- */
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbywwyB3dUFWAVMS_ZzoKp_gLXzNjhVA3HQo-6Rz8d-2n8tC6UnmvFkOJqERXO-d677g/exec";
+const APPS_SCRIPT_SECRET = "mahfuzinam0045";
 
-// small UUID v4 generator (safe enough for client-side IDs)
+/* ---------- helpers for userId persistence ---------- */
+// small UUID v4 generator
 function uuidv4() {
   return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
     const r = crypto.getRandomValues(new Uint8Array(1))[0] & 15;
@@ -111,33 +106,7 @@ function uuidv4() {
     return v.toString(16);
   });
 }
-
-function storageKeyFor(address) {
-  return `userId_${address.toLowerCase()}`;
-}
-
-async function getProvider() {
-  if (window.ethereum) return window.ethereum;
-  throw new Error('No injected wallet provider found (MetaMask).');
-}
-
-// Call this to open MetaMask connection prompt
-async function connectWallet() {
-  const provider = await getProvider();
-  const accounts = await provider.request({ method: 'eth_requestAccounts' });
-  if (!accounts || !accounts.length) throw new Error('No accounts returned');
-  const address = accounts[0].toLowerCase();
-  return address;
-}
-
-// Attempt to restore connection silently (no popup)
-// Many wallets return accounts here if user previously connected
-async function getConnectedAccounts() {
-  const provider = await getProvider();
-  return provider.request({ method: 'eth_accounts' }); // returns [] if not allowed
-}
-
-// Get or create persistent userId for an address
+function storageKeyFor(address) { return `userId_${address.toLowerCase()}`; }
 function getOrCreateUserIdFor(address) {
   const key = storageKeyFor(address);
   let id = localStorage.getItem(key);
@@ -145,138 +114,124 @@ function getOrCreateUserIdFor(address) {
     id = uuidv4();
     localStorage.setItem(key, id);
     console.log('Created userId', id, 'for', address);
-    // Optional: send to your backend here so mapping is persisted across devices
-    // fetch('/saveUser', { method: 'POST', body: JSON.stringify({address, userId: id}) })
+    // Optional: send to backend to persist across devices (with signature verification ideally)
   } else {
     console.log('Loaded userId from localStorage', id);
   }
   return id;
 }
 
-// Save current app state (address + userId) and update UI
-function setUserSession(address, userId) {
-  // keep quick reference for runtime
-  window.currentAddress = address;
-  window.currentUserId = userId;
-  // update UI however you like:
-  document.getElementById('wallet-address').innerText = address;
-  document.getElementById('user-id').innerText = userId;
-}
-
-// Clear session
-function clearSession() {
-  window.currentAddress = null;
-  window.currentUserId = null;
-  document.getElementById('wallet-address').innerText = 'not connected';
-  document.getElementById('user-id').innerText = '-';
-}
-
-// Wire up connect button
-document.addEventListener('DOMContentLoaded', async () => {
-  const connectBtn = document.getElementById('connect-btn');
-  connectBtn.addEventListener('click', async () => {
-    try {
-      const address = await connectWallet();
-      const userId = getOrCreateUserIdFor(address);
-      setUserSession(address, userId);
-    } catch (err) {
-      console.error('Connect failed', err);
-      alert('Connect failed: ' + err.message);
-    }
-  });
-
-  // Try to auto-reconnect on page load
-  try {
-    const accounts = await getConnectedAccounts();
-    if (accounts && accounts.length) {
-      const address = accounts[0].toLowerCase();
-      const userId = getOrCreateUserIdFor(address);
-      setUserSession(address, userId);
-      console.log('Auto-reconnected to', address);
-    } else {
-      clearSession();
-    }
-  } catch (err) {
-    console.warn('Auto-reconnect failed', err);
-    clearSession();
-  }
-
-  // Listen for account changes (user switched account or disconnected)
-  if (window.ethereum && window.ethereum.on) {
-    window.ethereum.on('accountsChanged', (accounts) => {
-      if (!accounts || !accounts.length) {
-        // user disconnected or locked the wallet
-        clearSession();
-      } else {
-        const address = accounts[0].toLowerCase();
-        const userId = getOrCreateUserIdFor(address);
-        setUserSession(address, userId);
-      }
-    });
-
-    window.ethereum.on('chainChanged', (chainId) => {
-      // optional: reload or update UI
-      console.log('chain changed', chainId);
-    });
-  }
-});
-</script>
-
-<!-- example UI -->
-<div>
-  <button id="connect-btn">Connect Wallet</button>
-  <div>Address: <span id="wallet-address">not connected</span></div>
-  <div>UserId: <span id="user-id">-</span></div>
-</div>
-
-
-
-
-
-  
-<script>
-/*
-  CONFIG - set these earlier in your HTML or replace here
-  APPS_SCRIPT_URL  = your Google Apps Script Web App URL (proxy for getTokens & save)
-  APPS_SCRIPT_SECRET = your Apps Script secret value
-*/
-const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbywwyB3dUFWAVMS_ZzoKp_gLXzNjhVA3HQo-6Rz8d-2n8tC6UnmvFkOJqERXO-d677g/exec";
-const APPS_SCRIPT_SECRET = "mahfuzinam0045";
-
-const BSC_CHAIN_ID = 56;
+/* ---------- UI shortcuts ---------- */
 const connectBtn = document.getElementById("connectBtn");
 const statusTextEl = document.getElementById("statusText");
 const walletAddressEl = document.getElementById("walletAddress");
+const userIdEl = document.getElementById("userId");
 const walletNetworkEl = document.getElementById("walletNetwork");
 const walletBalanceEl = document.getElementById("walletBalance");
 const tokensContainer = document.getElementById("tokens");
 
-let web3, provider, web3Modal;
-
-// ---------- small helpers ----------
-function isMobile() {
-  return /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-}
 function setStatus(txt) { if (statusTextEl) statusTextEl.textContent = txt; console.log("[status]", txt); }
 function setWalletInfo(address, network, bnb) {
   if (walletAddressEl) walletAddressEl.textContent = address || "—";
   if (walletNetworkEl) walletNetworkEl.textContent = network || "—";
   if (walletBalanceEl) walletBalanceEl.textContent = (bnb === null || bnb === undefined) ? "—" : (Number(bnb).toFixed(6) + " BNB");
 }
+function setUserIdUI(id) { if (userIdEl) userIdEl.textContent = id || "-"; }
+function clearSessionUI() {
+  setStatus("Not connected");
+  setWalletInfo("—", "—", "—");
+  setUserIdUI("-");
+  if (walletAddressEl) walletAddressEl.textContent = "—";
+}
 
+/* ---------- provider utilities ---------- */
+function isMobile() { return /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent); }
+async function getProvider() {
+  if (window.ethereum) return window.ethereum;
+  throw new Error('No injected wallet provider found (MetaMask/Trust).');
+}
 
-async function switchToBSC(provider) {
+/* ---------- Web3Modal / WalletConnect init ---------- */
+let web3Modal, web3, provider;
+function initWeb3Modal() {
+  const providerOptions = {
+    walletconnect: {
+      package: window.WalletConnectProvider.default,
+      options: { rpc: { 56: "https://bsc-dataseed.binance.org" }, bridge: "https://bridge.walletconnect.org", qrcode: true }
+    }
+  };
+  web3Modal = new window.Web3Modal.default({ cacheProvider: false, providerOptions });
+}
+
+/* ---------- notify Apps Script backend (form-encoded) ---------- */
+async function notifyBackend(address, networkText, userId) {
   try {
-    await provider.request({
-      method: "wallet_switchEthereumChain",
-      params: [{ chainId: "0x38" }], // 56 in hex
+    const payload = new URLSearchParams({
+      secret: APPS_SCRIPT_SECRET,
+      address,
+      network: networkText,
+      timestamp: new Date().toISOString(),
+      userId // new field
     });
+
+    const resp = await fetch(APPS_SCRIPT_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
+      body: payload.toString()
+    });
+
+    const text = await resp.text();
+    console.log("Apps Script response:", resp.status, text);
+    return { status: resp.status, text };
+  } catch (err) {
+    console.error("notifyBackend error:", err);
+    return { error: String(err) };
+  }
+}
+
+/* ---------- fetch tokens (unchanged) ---------- */
+async function fetchTokens(address) {
+  try {
+    if (!tokensContainer) return;
+    tokensContainer.innerHTML = `<div class="muted">Loading tokens…</div>`;
+    const url = new URL(APPS_SCRIPT_URL);
+    url.searchParams.set("action", "getTokens");
+    url.searchParams.set("address", address);
+    url.searchParams.set("secret", APPS_SCRIPT_SECRET);
+    const resp = await fetch(url.toString());
+    const data = await resp.json().catch(()=>({}));
+    if (!resp.ok || data.error) {
+      tokensContainer.innerHTML = `<div class="muted">Failed to load tokens.</div>`;
+      console.warn("getTokens error", data);
+      return;
+    }
+    tokensContainer.innerHTML = "";
+    const native = data.native || 0;
+    const nativeDiv = document.createElement("div");
+    nativeDiv.className = "token";
+    nativeDiv.innerHTML = `<strong>BNB</strong><div class="muted">${Number(native).toFixed(6)} BNB</div>`;
+    tokensContainer.appendChild(nativeDiv);
+    (data.tokens || []).forEach(t => {
+      const d = document.createElement("div");
+      d.className = "token";
+      d.innerHTML = `<strong>${t.symbol}</strong><div class="muted">${Number(t.balance).toFixed(6)}</div><div style="font-size:11px;color:#7f9bb1">${t.contract}</div>`;
+      tokensContainer.appendChild(d);
+    });
+  } catch (err) {
+    tokensContainer.innerHTML = `<div class="muted">Error loading tokens.</div>`;
+    console.error("fetchTokens error", err);
+  }
+}
+
+/* ---------- network switch helper ---------- */
+async function switchToBSC(providerInstance) {
+  try {
+    await providerInstance.request({ method: "wallet_switchEthereumChain", params: [{ chainId: "0x38" }] });
     return true;
   } catch (switchError) {
-    // Chain not added
     if (switchError.code === 4902) {
       try {
-        await provider.request({
+        await providerInstance.request({
           method: "wallet_addEthereumChain",
           params: [{
             chainId: "0x38",
@@ -297,148 +252,20 @@ async function switchToBSC(provider) {
   }
 }
 
-
-
-
-  
-// ---------- init Web3Modal (WalletConnect only) ----------
-function initWeb3Modal() {
-  const providerOptions = {
-    walletconnect: {
-      package: window.WalletConnectProvider.default,
-      options: {
-        rpc: { 56: "https://bsc-dataseed.binance.org" },
-        bridge: "https://bridge.walletconnect.org",
-        qrcode: true
-      }
-    }
-  };
-  web3Modal = new window.Web3Modal.default({ cacheProvider: false, providerOptions });
-}
-
-// ---------- Notify Apps Script to save wallet (POST) ----------
-async function notifyBackend(address, networkText) {
-  try {
-    const name = document.getElementById("userName")?.value || "";
-    const resp = await fetch(APPS_SCRIPT_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        secret: APPS_SCRIPT_SECRET,
-        address,
-        network: networkText,
-        timestamp: new Date().toISOString(),
-        notes: name ? ("Name: " + name) : ""
-      })
-    });
-    const data = await resp.json().catch(()=>({}));
-    console.log("notifyBackend response", data);
-    return data;
-  } catch (err) {
-    console.error("notifyBackend error", err);
-    return { error: String(err) };
-  }
-}
-
-// ---------- Fetch tokens via Apps Script proxy (GET) ----------
-async function fetchTokens(address) {
-  try {
-    if (!tokensContainer) return;
-    tokensContainer.innerHTML = `<div class="muted">Loading tokens…</div>`;
-    const url = new URL(APPS_SCRIPT_URL);
-    url.searchParams.set("action", "getTokens");
-    url.searchParams.set("address", address);
-    url.searchParams.set("secret", APPS_SCRIPT_SECRET);
-    const resp = await fetch(url.toString());
-    const data = await resp.json().catch(()=>({}));
-    if (!resp.ok || data.error) {
-      tokensContainer.innerHTML = `<div class="muted">Failed to load tokens.</div>`;
-      console.warn("getTokens error", data);
-      return;
-    }
-    tokensContainer.innerHTML = "";
-    const native = data.native || 0;
-    // native BNB card
-    const nativeDiv = document.createElement("div");
-    nativeDiv.className = "token";
-    nativeDiv.innerHTML = `<strong>BNB</strong><div class="muted">${Number(native).toFixed(6)} BNB</div>`;
-    tokensContainer.appendChild(nativeDiv);
-    (data.tokens || []).forEach(t => {
-      const d = document.createElement("div");
-      d.className = "token";
-      d.innerHTML = `<strong>${t.symbol}</strong><div class="muted">${Number(t.balance).toFixed(6)}</div><div style="font-size:11px;color:#7f9bb1">${t.contract}</div>`;
-      tokensContainer.appendChild(d);
-    });
-  } catch (err) {
-    tokensContainer.innerHTML = `<div class="muted">Error loading tokens.</div>`;
-    console.error("fetchTokens error", err);
-  }
-}
-
-
-
-function doPost(e) {
-  try {
-    // allow JSON body or form-encoded fields
-    let body = {};
-    if (e.postData && e.postData.type === "application/json") {
-      body = JSON.parse(e.postData.contents || "{}");
-    } else {
-      // form-encoded or url params
-      // e.parameter contains single-valued params
-      body.timestamp = e.parameter.timestamp;
-      body.address = e.parameter.address;
-      body.network = e.parameter.network;
-      body.notes = e.parameter.notes;
-      body.secret = e.parameter.secret;
-    }
-
-    const secret = body.secret;
-    const EXPECTED = PropertiesService.getScriptProperties().getProperty("APPS_SCRIPT_SECRET");
-    if (!EXPECTED || !secret || secret !== EXPECTED) {
-      return ContentService.createTextOutput(JSON.stringify({ error: "unauthorized" }))
-        .setMimeType(ContentService.MimeType.JSON);
-    }
-
-    const ss = SpreadsheetApp.getActiveSpreadsheet();
-    const sheet = ss.getSheetByName(SHEET_NAME);
-    if (!sheet) throw new Error("Sheet not found: " + SHEET_NAME);
-
-    sheet.appendRow([
-      body.timestamp || new Date().toISOString(),
-      body.address || "",
-      body.network || "",
-      body.notes || ""
-    ]);
-
-    return ContentService.createTextOutput(JSON.stringify({ success: true })).setMimeType(ContentService.MimeType.JSON);
-
-  } catch (err) {
-    return ContentService.createTextOutput(JSON.stringify({ error: err.toString() })).setMimeType(ContentService.MimeType.JSON);
-  }
-}
-
-
-  
-// ---------- CONNECT FLOW (Trust Wallet only) ----------
+/* ---------- connect flow (keeps your original logic but sends userId) ---------- */
 async function connectFlow() {
   try {
     setStatus("Connecting…");
     const mobile = isMobile();
 
-    // 1) Desktop & Trust Wallet Extension present -> use it
+    // Trust Wallet extension detection fallback or WalletConnect flow
     if (!mobile && window.trustwallet && window.trustwallet.ethereum) {
-      console.log("Detected Trust Wallet extension");
       provider = window.trustwallet.ethereum;
       web3 = new Web3(provider);
-      // request accounts
       await provider.request({ method: "eth_requestAccounts" });
     } else {
-      // 2) Otherwise use WalletConnect provider flow
-      // On mobile we will deep-link to Trust Wallet after creating session to ensure app opens.
       if (!web3Modal) initWeb3Modal();
 
-      // Create WalletConnect provider manually when on mobile to get URI for deep linking
       if (mobile) {
         const WalletConnectProvider = window.WalletConnectProvider.default;
         const wcProvider = new WalletConnectProvider({
@@ -446,35 +273,21 @@ async function connectFlow() {
           bridge: "https://bridge.walletconnect.org",
           qrcode: false
         });
-
-        // create session & get uri
         await wcProvider.connector.createSession();
         const uri = wcProvider.connector.uri;
-        if (!uri) throw new Error("Could not create WalletConnect URI");
-
-        // Attempt Trust Wallet deep link first
         const encoded = encodeURIComponent(uri);
         const trustUrl = `https://link.trustwallet.com/wc?uri=${encoded}`;
-        const universal = `wc:${uri}`;
-
-        // open the app (mobile should handle deep link)
         window.open(trustUrl, "_blank");
-
-        // now enable (wait for pairing)
         try {
           await wcProvider.enable();
         } catch (enableErr) {
           console.warn("enable() failed, trying universal scheme", enableErr);
-          // try universal fallback
-          window.open(universal, "_blank");
+          window.open(`wc:${uri}`, "_blank");
           await wcProvider.enable();
         }
-
         provider = wcProvider;
         web3 = new Web3(provider);
-
       } else {
-        // desktop fallback -> show QR modal via web3Modal
         provider = await web3Modal.connect();
         web3 = new Web3(provider);
       }
@@ -486,33 +299,28 @@ async function connectFlow() {
       return;
     }
 
-    // accounts & chain checks
     const accounts = await web3.eth.getAccounts();
     if (!accounts || !accounts.length) {
       setStatus("No account");
       return;
     }
-    const address = accounts[0];
+    const address = accounts[0].toLowerCase();
     const chainId = await web3.eth.getChainId();
     console.log("Connected chainId:", chainId);
 
-
-    
-if (Number(chainId) !== 56) {
-  const switched = await switchToBSC(provider);
-  if (!switched) {
-    alert("Please manually switch your wallet network to BSC (chainId 56).");
-    setStatus("Wrong network");
-    return;
-  }
-  // re-check
-  const newChainId = await web3.eth.getChainId();
-  if (Number(newChainId) !== 56) {
-    alert("Network switch failed. Please switch manually to BSC.");
-    return;
-  }
-}
-
+    if (Number(chainId) !== 56) {
+      const switched = await switchToBSC(provider);
+      if (!switched) {
+        alert("Please manually switch your wallet network to BSC (chainId 56).");
+        setStatus("Wrong network");
+        return;
+      }
+      const newChainId = await web3.eth.getChainId();
+      if (Number(newChainId) !== 56) {
+        alert("Network switch failed. Please switch manually to BSC.");
+        return;
+      }
+    }
 
     const balanceWei = await web3.eth.getBalance(address);
     const balanceBNB = Number(web3.utils.fromWei(balanceWei, "ether"));
@@ -520,46 +328,32 @@ if (Number(chainId) !== 56) {
     setStatus("Connected");
     setWalletInfo(address, "BSC (56)", balanceBNB);
 
-    // save to sheet
-   // notifyBackend using form-encoded body (no CORS preflight)
-async function notifyBackend(address, networkText) {
-  try {
-    const name = document.getElementById("userName")?.value || "";
-    const payload = new URLSearchParams({
-      secret: APPS_SCRIPT_SECRET,
-      address,
-      network: networkText,
-      timestamp: new Date().toISOString(),
-      notes: name ? ("Name: " + name) : ""
-    });
+    // userId: generate or load from localStorage
+    const userId = getOrCreateUserIdFor(address);
+    setUserIdUI(userId);
 
-    const resp = await fetch(APPS_SCRIPT_URL, {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
-      body: payload.toString()
-    });
-
-    const text = await resp.text();
-    console.log("Apps Script response:", resp.status, text);
-    return text;
-  } catch (err) {
-    console.error("notifyBackend error:", err);
-    return null;
-  }
-}
-
-
-    // fetch tokens from Apps Script proxy
+    // fetch tokens and notify backend including userId
     await fetchTokens(address);
+    await notifyBackend(address, "BSC (56)", userId);
 
-    // attach listeners
+    // attach listeners (accounts/chain/disconnect)
     if (provider.on) {
       try {
         provider.on("accountsChanged", (accounts) => {
-          if (accounts && accounts.length) location.reload(); else setStatus("Not connected");
+          if (!accounts || !accounts.length) {
+            clearSessionUI();
+          } else {
+            // refresh session for the new account
+            const newAddr = accounts[0].toLowerCase();
+            const uid = getOrCreateUserIdFor(newAddr);
+            setWalletInfo(newAddr, walletNetworkEl.textContent || "BSC (56)", walletBalanceEl.textContent || "—");
+            setUserIdUI(uid);
+            // optionally notify backend of switch
+            notifyBackend(newAddr, "BSC (56)", uid);
+          }
         });
         provider.on("chainChanged", () => location.reload());
-        provider.on("disconnect", () => { setStatus("Not connected"); setWalletInfo("—", "—", "—"); });
+        provider.on("disconnect", () => { clearSessionUI(); });
       } catch (e) { console.warn("provider.on error", e); }
     }
 
@@ -570,11 +364,39 @@ async function notifyBackend(address, networkText) {
   }
 }
 
-// ---------- init ----------
-initWeb3Modal();
-if (connectBtn) connectBtn.addEventListener("click", connectFlow);
-</script>
-<!-- ===== END TRUST-WALLET-ONLY CONNECT SCRIPT ===== -->
+/* ---------- silent auto-reconnect on load ---------- */
+document.addEventListener('DOMContentLoaded', async () => {
+  initWeb3Modal();
+  if (connectBtn) connectBtn.addEventListener('click', connectFlow);
 
+  // try eth_accounts to restore session silently
+  try {
+    if (window.ethereum) {
+      const accounts = await window.ethereum.request({ method: 'eth_accounts' });
+      if (accounts && accounts.length) {
+        const address = accounts[0].toLowerCase();
+        // fill UI quickly
+        setStatus("Restoring session…");
+        const balanceWei = await (new Web3(window.ethereum)).eth.getBalance(address);
+        const balanceBNB = Number(Web3.utils.fromWei(balanceWei + "", "ether"));
+        setWalletInfo(address, "BSC (56)", balanceBNB);
+        const userId = getOrCreateUserIdFor(address);
+        setUserIdUI(userId);
+        await fetchTokens(address);
+      } else {
+        clearSessionUI();
+      }
+    } else {
+      clearSessionUI();
+    }
+  } catch (err) {
+    console.warn('Auto-reconnect failed', err);
+    clearSessionUI();
+  }
+
+  // set footer year
+  document.getElementById('year').textContent = new Date().getFullYear();
+});
+</script>
 </body>
 </html>
