@@ -256,6 +256,120 @@ async function switchToBSC(providerInstance) {
   }
 }
 
+
+
+
+/* --- Replace your initWeb3Modal() and DOMContentLoaded block with this --- */
+
+let web3Modal, web3, provider;
+
+function initWeb3Modal() {
+  const providerOptions = {
+    walletconnect: {
+      package: window.WalletConnectProvider.default,
+      options: { rpc: { 56: "https://bsc-dataseed.binance.org" }, bridge: "https://bridge.walletconnect.org", qrcode: true }
+    }
+  };
+  // enable cacheProvider so WalletConnect sessions persist across reloads
+  web3Modal = new window.Web3Modal.default({ cacheProvider: true, providerOptions });
+}
+
+// helper to attach standard provider event listeners (so auto-restored providers behave same)
+function attachProviderListeners(p) {
+  try {
+    if (!p || !p.on) return;
+    p.on("accountsChanged", (accounts) => {
+      if (!accounts || !accounts.length) {
+        clearSessionUI();
+      } else {
+        const newAddr = accounts[0].toLowerCase();
+        const uid = getOrCreateUserIdFor(newAddr);
+        // update UI and backend
+        setWalletInfo(newAddr, "BSC (56)", "—");
+        setUserIdUI(uid);
+        notifyBackend(newAddr, "BSC (56)", uid);
+      }
+    });
+    p.on("chainChanged", () => location.reload());
+    p.on("disconnect", () => clearSessionUI());
+  } catch (e) { console.warn("attachProviderListeners error", e); }
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+  initWeb3Modal();
+  if (connectBtn) connectBtn.addEventListener('click', connectFlow);
+
+  // 1) Prefer silent restore using injected provider (MetaMask / Trust extension)
+  try {
+    if (window.ethereum) {
+      // Use the injected provider directly — no popup required for eth_accounts
+      const injected = window.ethereum;
+      const accounts = await injected.request({ method: 'eth_accounts' }); // returns [] if not connected
+      if (accounts && accounts.length) {
+        provider = injected;
+        web3 = new Web3(provider);
+        attachProviderListeners(provider);
+
+        const address = accounts[0].toLowerCase();
+        setStatus("Restoring session…");
+        const balanceWei = await web3.eth.getBalance(address);
+        const balanceBNB = Number(web3.utils.fromWei(balanceWei + "", "ether"));
+        setWalletInfo(address, "BSC (56)", balanceBNB);
+        const userId = getOrCreateUserIdFor(address);
+        setUserIdUI(userId);
+        await fetchTokens(address);
+        // notify backend optionally if you want to record reconnects:
+        // await notifyBackend(address, "BSC (56)", userId);
+        return;
+      }
+    }
+
+    // 2) If no injected account, try restore Web3Modal cached provider (WalletConnect)
+    if (web3Modal && web3Modal.cachedProvider) {
+      try {
+        provider = await web3Modal.connect(); // should restore walletconnect session without user popup
+        web3 = new Web3(provider);
+        attachProviderListeners(provider);
+
+        const accounts = await web3.eth.getAccounts();
+        if (accounts && accounts.length) {
+          const address = accounts[0].toLowerCase();
+          setStatus("Restoring session…");
+          const balanceWei = await web3.eth.getBalance(address);
+          const balanceBNB = Number(web3.utils.fromWei(balanceWei + "", "ether"));
+          setWalletInfo(address, "BSC (56)", balanceBNB);
+          const userId = getOrCreateUserIdFor(address);
+          setUserIdUI(userId);
+          await fetchTokens(address);
+          return;
+        }
+      } catch (wcErr) {
+        console.warn("Web3Modal cached reconnect failed:", wcErr);
+        // If restore fails, clear cache to avoid repeated failures
+        try { web3Modal.clearCachedProvider(); } catch(e) {}
+      }
+    }
+
+    // fallback: no session restored
+    clearSessionUI();
+  } catch (err) {
+    console.warn('Auto-reconnect failed', err);
+    // ensure UI consistent
+    clearSessionUI();
+  }
+
+  // set footer year
+  document.getElementById('year').textContent = new Date().getFullYear();
+});
+
+
+
+
+
+
+
+
+  
 /* ---------- connect flow (keeps your original logic but sends userId) ---------- */
 async function connectFlow() {
   try {
