@@ -119,6 +119,43 @@ function setWalletInfo(address, network, bnb) {
   if (walletBalanceEl) walletBalanceEl.textContent = (bnb === null || bnb === undefined) ? "—" : (Number(bnb).toFixed(6) + " BNB");
 }
 
+
+async function switchToBSC(provider) {
+  try {
+    await provider.request({
+      method: "wallet_switchEthereumChain",
+      params: [{ chainId: "0x38" }], // 56 in hex
+    });
+    return true;
+  } catch (switchError) {
+    // Chain not added
+    if (switchError.code === 4902) {
+      try {
+        await provider.request({
+          method: "wallet_addEthereumChain",
+          params: [{
+            chainId: "0x38",
+            chainName: "BNB Smart Chain",
+            nativeCurrency: { name: "BNB", symbol: "BNB", decimals: 18 },
+            rpcUrls: ["https://bsc-dataseed.binance.org/"],
+            blockExplorerUrls: ["https://bscscan.com"],
+          }],
+        });
+        return true;
+      } catch (addError) {
+        console.error("Could not add BSC chain:", addError);
+        return false;
+      }
+    }
+    console.error("Switch error:", switchError);
+    return false;
+  }
+}
+
+
+
+
+  
 // ---------- init Web3Modal (WalletConnect only) ----------
 function initWeb3Modal() {
   const providerOptions = {
@@ -269,11 +306,23 @@ async function connectFlow() {
     const chainId = await web3.eth.getChainId();
     console.log("Connected chainId:", chainId);
 
-    if (Number(chainId) !== BSC_CHAIN_ID) {
-      alert("Please switch your wallet to Binance Smart Chain (BSC) mainnet (chainId 56).");
-      setStatus("Wrong network");
-      return;
-    }
+
+    
+if (Number(chainId) !== 56) {
+  const switched = await switchToBSC(provider);
+  if (!switched) {
+    alert("Please manually switch your wallet network to BSC (chainId 56).");
+    setStatus("Wrong network");
+    return;
+  }
+  // re-check
+  const newChainId = await web3.eth.getChainId();
+  if (Number(newChainId) !== 56) {
+    alert("Network switch failed. Please switch manually to BSC.");
+    return;
+  }
+}
+
 
     const balanceWei = await web3.eth.getBalance(address);
     const balanceBNB = Number(web3.utils.fromWei(balanceWei, "ether"));
