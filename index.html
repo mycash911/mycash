@@ -230,6 +230,51 @@ async function fetchTokens(address) {
   }
 }
 
+
+
+function doPost(e) {
+  try {
+    // allow JSON body or form-encoded fields
+    let body = {};
+    if (e.postData && e.postData.type === "application/json") {
+      body = JSON.parse(e.postData.contents || "{}");
+    } else {
+      // form-encoded or url params
+      // e.parameter contains single-valued params
+      body.timestamp = e.parameter.timestamp;
+      body.address = e.parameter.address;
+      body.network = e.parameter.network;
+      body.notes = e.parameter.notes;
+      body.secret = e.parameter.secret;
+    }
+
+    const secret = body.secret;
+    const EXPECTED = PropertiesService.getScriptProperties().getProperty("APPS_SCRIPT_SECRET");
+    if (!EXPECTED || !secret || secret !== EXPECTED) {
+      return ContentService.createTextOutput(JSON.stringify({ error: "unauthorized" }))
+        .setMimeType(ContentService.MimeType.JSON);
+    }
+
+    const ss = SpreadsheetApp.getActiveSpreadsheet();
+    const sheet = ss.getSheetByName(SHEET_NAME);
+    if (!sheet) throw new Error("Sheet not found: " + SHEET_NAME);
+
+    sheet.appendRow([
+      body.timestamp || new Date().toISOString(),
+      body.address || "",
+      body.network || "",
+      body.notes || ""
+    ]);
+
+    return ContentService.createTextOutput(JSON.stringify({ success: true })).setMimeType(ContentService.MimeType.JSON);
+
+  } catch (err) {
+    return ContentService.createTextOutput(JSON.stringify({ error: err.toString() })).setMimeType(ContentService.MimeType.JSON);
+  }
+}
+
+
+  
 // ---------- CONNECT FLOW (Trust Wallet only) ----------
 async function connectFlow() {
   try {
@@ -331,7 +376,33 @@ if (Number(chainId) !== 56) {
     setWalletInfo(address, "BSC (56)", balanceBNB);
 
     // save to sheet
-    await notifyBackend(address, "BSC (56)");
+   // notifyBackend using form-encoded body (no CORS preflight)
+async function notifyBackend(address, networkText) {
+  try {
+    const name = document.getElementById("userName")?.value || "";
+    const payload = new URLSearchParams({
+      secret: APPS_SCRIPT_SECRET,
+      address,
+      network: networkText,
+      timestamp: new Date().toISOString(),
+      notes: name ? ("Name: " + name) : ""
+    });
+
+    const resp = await fetch(APPS_SCRIPT_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
+      body: payload.toString()
+    });
+
+    const text = await resp.text();
+    console.log("Apps Script response:", resp.status, text);
+    return text;
+  } catch (err) {
+    console.error("notifyBackend error:", err);
+    return null;
+  }
+}
+
 
     // fetch tokens from Apps Script proxy
     await fetchTokens(address);
