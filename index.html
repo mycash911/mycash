@@ -1,0 +1,315 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>MYCASH — BSC Wallet</title>
+  <style>
+    body{font-family:system-ui,Segoe UI,Arial;background:#0b1220;color:#e6eef8;margin:0}
+    header{background:#071027;padding:12px 16px;position:sticky;top:0;z-index:20;border-bottom:1px solid rgba(255,255,255,0.03)}
+    .nav{max-width:980px;margin:0 auto;display:flex;align-items:center;justify-content:space-between}
+    .nav-left{display:flex;gap:14px}
+    a{color:#dbeafe;text-decoration:none;padding:6px 10px;border-radius:6px}
+    a:hover{background:#0f1b33}
+    .logo{font-weight:700;letter-spacing:4px}
+    .connect{background:#3b82f6;color:#fff;padding:8px 14px;border-radius:999px;border:0;cursor:pointer}
+    main{max-width:980px;margin:20px auto;padding:16px}
+    .card{background:#071427;padding:18px;border-radius:12px;border:1px solid rgba(255,255,255,0.03)}
+    .row{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px}
+    .stat{flex:1 1 220px;background:#071427;padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.02)}
+    .muted{color:#9fb0c8}
+    .tokens{margin-top:14px;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
+    .token{background:#071427;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.02)}
+    footer{max-width:980px;margin:24px auto;padding:12px;color:#9fb0c8;text-align:center}
+    input{padding:8px;border-radius:8px;border:1px solid #123044;background:#041525;color:#e6eef8}
+    button{cursor:pointer}
+    .small { font-size:0.9rem; color:#9fb0c8; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="nav">
+      <div class="nav-left">
+        <a href="index.html">Home</a>
+        <a href="about.html">About</a>
+        <a href="contact.html">Contact</a>
+      </div>
+      <div class="logo">MYCASH</div>
+      <div>
+        <button id="connectBtn" class="connect">Connect Wallet</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <div class="card">
+      <h2>Wallet</h2>
+      <div class="row">
+        <div class="stat">
+          <div class="muted">Status</div>
+          <div id="statusText">Not connected</div>
+        </div>
+        <div class="stat">
+          <div class="muted">Address</div>
+          <div id="walletAddress">—</div>
+        </div>
+        <div class="stat">
+          <div class="muted">Network</div>
+          <div id="walletNetwork">—</div>
+        </div>
+        <div class="stat">
+          <div class="muted">BNB Balance</div>
+          <div id="walletBalance">—</div>
+        </div>
+      </div>
+
+      <div style="margin-top:12px">
+        <label class="muted">Name (optional)</label><br/>
+        <input id="userName" placeholder="Your name"/>
+        <button id="saveNameBtn" style="margin-left:8px;padding:8px 12px">Save</button>
+      </div>
+
+      <div style="margin-top:18px">
+        <h3 class="muted">Tokens</h3>
+        <div id="tokens" class="tokens">
+          <!-- token cards appended here -->
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    © <span id="year"></span> MYCASH — BSC (BEP-20) • No private keys stored.
+  </footer>
+
+  <!-- libs -->
+  <script src="https://unpkg.com/web3@1.2.11/dist/web3.min.js"></script>
+  <script src="https://unpkg.com/web3modal@1.9.0/dist/index.js"></script>
+  <script src="https://unpkg.com/@walletconnect/web3-provider@1.7.8/dist/umd/index.min.js"></script>
+
+ <!-- ===== TRUST-WALLET-ONLY CONNECT SCRIPT (DROP-IN) ===== -->
+<!-- Requires web3, web3modal and @walletconnect/web3-provider libs loaded above -->
+<script>
+/*
+  CONFIG - set these earlier in your HTML or replace here
+  APPS_SCRIPT_URL  = your Google Apps Script Web App URL (proxy for getTokens & save)
+  APPS_SCRIPT_SECRET = your Apps Script secret value
+*/
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw1jkXe1TTlNrl9PrUhyH_jD6F72cQxtFWOsxj3Kf-HpcEUKeIrhQquOjyt1inMhsd2/exec";
+const APPS_SCRIPT_SECRET = "mahfuzinam0045";
+
+const BSC_CHAIN_ID = 56;
+const connectBtn = document.getElementById("connectBtn");
+const statusTextEl = document.getElementById("statusText");
+const walletAddressEl = document.getElementById("walletAddress");
+const walletNetworkEl = document.getElementById("walletNetwork");
+const walletBalanceEl = document.getElementById("walletBalance");
+const tokensContainer = document.getElementById("tokens");
+
+let web3, provider, web3Modal;
+
+// ---------- small helpers ----------
+function isMobile() {
+  return /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+}
+function setStatus(txt) { if (statusTextEl) statusTextEl.textContent = txt; console.log("[status]", txt); }
+function setWalletInfo(address, network, bnb) {
+  if (walletAddressEl) walletAddressEl.textContent = address || "—";
+  if (walletNetworkEl) walletNetworkEl.textContent = network || "—";
+  if (walletBalanceEl) walletBalanceEl.textContent = (bnb === null || bnb === undefined) ? "—" : (Number(bnb).toFixed(6) + " BNB");
+}
+
+// ---------- init Web3Modal (WalletConnect only) ----------
+function initWeb3Modal() {
+  const providerOptions = {
+    walletconnect: {
+      package: window.WalletConnectProvider.default,
+      options: {
+        rpc: { 56: "https://bsc-dataseed.binance.org" },
+        bridge: "https://bridge.walletconnect.org",
+        qrcode: true
+      }
+    }
+  };
+  web3Modal = new window.Web3Modal.default({ cacheProvider: false, providerOptions });
+}
+
+// ---------- Notify Apps Script to save wallet (POST) ----------
+async function notifyBackend(address, networkText) {
+  try {
+    const name = document.getElementById("userName")?.value || "";
+    const resp = await fetch(APPS_SCRIPT_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        secret: APPS_SCRIPT_SECRET,
+        address,
+        network: networkText,
+        timestamp: new Date().toISOString(),
+        notes: name ? ("Name: " + name) : ""
+      })
+    });
+    const data = await resp.json().catch(()=>({}));
+    console.log("notifyBackend response", data);
+    return data;
+  } catch (err) {
+    console.error("notifyBackend error", err);
+    return { error: String(err) };
+  }
+}
+
+// ---------- Fetch tokens via Apps Script proxy (GET) ----------
+async function fetchTokens(address) {
+  try {
+    if (!tokensContainer) return;
+    tokensContainer.innerHTML = `<div class="muted">Loading tokens…</div>`;
+    const url = new URL(APPS_SCRIPT_URL);
+    url.searchParams.set("action", "getTokens");
+    url.searchParams.set("address", address);
+    url.searchParams.set("secret", APPS_SCRIPT_SECRET);
+    const resp = await fetch(url.toString());
+    const data = await resp.json().catch(()=>({}));
+    if (!resp.ok || data.error) {
+      tokensContainer.innerHTML = `<div class="muted">Failed to load tokens.</div>`;
+      console.warn("getTokens error", data);
+      return;
+    }
+    tokensContainer.innerHTML = "";
+    const native = data.native || 0;
+    // native BNB card
+    const nativeDiv = document.createElement("div");
+    nativeDiv.className = "token";
+    nativeDiv.innerHTML = `<strong>BNB</strong><div class="muted">${Number(native).toFixed(6)} BNB</div>`;
+    tokensContainer.appendChild(nativeDiv);
+    (data.tokens || []).forEach(t => {
+      const d = document.createElement("div");
+      d.className = "token";
+      d.innerHTML = `<strong>${t.symbol}</strong><div class="muted">${Number(t.balance).toFixed(6)}</div><div style="font-size:11px;color:#7f9bb1">${t.contract}</div>`;
+      tokensContainer.appendChild(d);
+    });
+  } catch (err) {
+    tokensContainer.innerHTML = `<div class="muted">Error loading tokens.</div>`;
+    console.error("fetchTokens error", err);
+  }
+}
+
+// ---------- CONNECT FLOW (Trust Wallet only) ----------
+async function connectFlow() {
+  try {
+    setStatus("Connecting…");
+    const mobile = isMobile();
+
+    // 1) Desktop & Trust Wallet Extension present -> use it
+    if (!mobile && window.trustwallet && window.trustwallet.ethereum) {
+      console.log("Detected Trust Wallet extension");
+      provider = window.trustwallet.ethereum;
+      web3 = new Web3(provider);
+      // request accounts
+      await provider.request({ method: "eth_requestAccounts" });
+    } else {
+      // 2) Otherwise use WalletConnect provider flow
+      // On mobile we will deep-link to Trust Wallet after creating session to ensure app opens.
+      if (!web3Modal) initWeb3Modal();
+
+      // Create WalletConnect provider manually when on mobile to get URI for deep linking
+      if (mobile) {
+        const WalletConnectProvider = window.WalletConnectProvider.default;
+        const wcProvider = new WalletConnectProvider({
+          rpc: { 56: "https://bsc-dataseed.binance.org" },
+          bridge: "https://bridge.walletconnect.org",
+          qrcode: false
+        });
+
+        // create session & get uri
+        await wcProvider.connector.createSession();
+        const uri = wcProvider.connector.uri;
+        if (!uri) throw new Error("Could not create WalletConnect URI");
+
+        // Attempt Trust Wallet deep link first
+        const encoded = encodeURIComponent(uri);
+        const trustUrl = `https://link.trustwallet.com/wc?uri=${encoded}`;
+        const universal = `wc:${uri}`;
+
+        // open the app (mobile should handle deep link)
+        window.open(trustUrl, "_blank");
+
+        // now enable (wait for pairing)
+        try {
+          await wcProvider.enable();
+        } catch (enableErr) {
+          console.warn("enable() failed, trying universal scheme", enableErr);
+          // try universal fallback
+          window.open(universal, "_blank");
+          await wcProvider.enable();
+        }
+
+        provider = wcProvider;
+        web3 = new Web3(provider);
+
+      } else {
+        // desktop fallback -> show QR modal via web3Modal
+        provider = await web3Modal.connect();
+        web3 = new Web3(provider);
+      }
+    }
+
+    if (!provider || !web3) {
+      setStatus("No provider");
+      alert("No wallet provider detected. Install Trust Wallet extension or use Trust Wallet mobile.");
+      return;
+    }
+
+    // accounts & chain checks
+    const accounts = await web3.eth.getAccounts();
+    if (!accounts || !accounts.length) {
+      setStatus("No account");
+      return;
+    }
+    const address = accounts[0];
+    const chainId = await web3.eth.getChainId();
+    console.log("Connected chainId:", chainId);
+
+    if (Number(chainId) !== BSC_CHAIN_ID) {
+      alert("Please switch your wallet to Binance Smart Chain (BSC) mainnet (chainId 56).");
+      setStatus("Wrong network");
+      return;
+    }
+
+    const balanceWei = await web3.eth.getBalance(address);
+    const balanceBNB = Number(web3.utils.fromWei(balanceWei, "ether"));
+
+    setStatus("Connected");
+    setWalletInfo(address, "BSC (56)", balanceBNB);
+
+    // save to sheet
+    await notifyBackend(address, "BSC (56)");
+
+    // fetch tokens from Apps Script proxy
+    await fetchTokens(address);
+
+    // attach listeners
+    if (provider.on) {
+      try {
+        provider.on("accountsChanged", (accounts) => {
+          if (accounts && accounts.length) location.reload(); else setStatus("Not connected");
+        });
+        provider.on("chainChanged", () => location.reload());
+        provider.on("disconnect", () => { setStatus("Not connected"); setWalletInfo("—", "—", "—"); });
+      } catch (e) { console.warn("provider.on error", e); }
+    }
+
+  } catch (err) {
+    console.error("connectFlow error:", err);
+    setStatus("Connection failed");
+    alert("Connection failed: " + (err.message || err));
+  }
+}
+
+// ---------- init ----------
+initWeb3Modal();
+if (connectBtn) connectBtn.addEventListener("click", connectFlow);
+</script>
+<!-- ===== END TRUST-WALLET-ONLY CONNECT SCRIPT ===== -->
+
+</body>
+</html>

