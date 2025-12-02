@@ -89,6 +89,151 @@
 
  <!-- ===== TRUST-WALLET-ONLY CONNECT SCRIPT (DROP-IN) ===== -->
 <!-- Requires web3, web3modal and @walletconnect/web3-provider libs loaded above -->
+
+
+<!-- include ethers if you use it; optional -->
+<script src="https://cdn.jsdelivr.net/npm/ethers@6/dist/ethers.umd.min.js"></script>
+<script>
+/**
+ * Minimal wallet connect + persistent userId example.
+ * - Generates a random userId (UUID v4) on first connect.
+ * - Saves mapping in localStorage under key `userId_<lowercaseAddress>`
+ * - Attempts auto-reconnect on page load by checking eth_accounts.
+ *
+ * NOTE: This does NOT store private keys. userId is public/non-sensitive.
+ */
+
+// small UUID v4 generator (safe enough for client-side IDs)
+function uuidv4() {
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, c => {
+    const r = crypto.getRandomValues(new Uint8Array(1))[0] & 15;
+    const v = c === 'x' ? r : (r & 0x3 | 0x8);
+    return v.toString(16);
+  });
+}
+
+function storageKeyFor(address) {
+  return `userId_${address.toLowerCase()}`;
+}
+
+async function getProvider() {
+  if (window.ethereum) return window.ethereum;
+  throw new Error('No injected wallet provider found (MetaMask).');
+}
+
+// Call this to open MetaMask connection prompt
+async function connectWallet() {
+  const provider = await getProvider();
+  const accounts = await provider.request({ method: 'eth_requestAccounts' });
+  if (!accounts || !accounts.length) throw new Error('No accounts returned');
+  const address = accounts[0].toLowerCase();
+  return address;
+}
+
+// Attempt to restore connection silently (no popup)
+// Many wallets return accounts here if user previously connected
+async function getConnectedAccounts() {
+  const provider = await getProvider();
+  return provider.request({ method: 'eth_accounts' }); // returns [] if not allowed
+}
+
+// Get or create persistent userId for an address
+function getOrCreateUserIdFor(address) {
+  const key = storageKeyFor(address);
+  let id = localStorage.getItem(key);
+  if (!id) {
+    id = uuidv4();
+    localStorage.setItem(key, id);
+    console.log('Created userId', id, 'for', address);
+    // Optional: send to your backend here so mapping is persisted across devices
+    // fetch('/saveUser', { method: 'POST', body: JSON.stringify({address, userId: id}) })
+  } else {
+    console.log('Loaded userId from localStorage', id);
+  }
+  return id;
+}
+
+// Save current app state (address + userId) and update UI
+function setUserSession(address, userId) {
+  // keep quick reference for runtime
+  window.currentAddress = address;
+  window.currentUserId = userId;
+  // update UI however you like:
+  document.getElementById('wallet-address').innerText = address;
+  document.getElementById('user-id').innerText = userId;
+}
+
+// Clear session
+function clearSession() {
+  window.currentAddress = null;
+  window.currentUserId = null;
+  document.getElementById('wallet-address').innerText = 'not connected';
+  document.getElementById('user-id').innerText = '-';
+}
+
+// Wire up connect button
+document.addEventListener('DOMContentLoaded', async () => {
+  const connectBtn = document.getElementById('connect-btn');
+  connectBtn.addEventListener('click', async () => {
+    try {
+      const address = await connectWallet();
+      const userId = getOrCreateUserIdFor(address);
+      setUserSession(address, userId);
+    } catch (err) {
+      console.error('Connect failed', err);
+      alert('Connect failed: ' + err.message);
+    }
+  });
+
+  // Try to auto-reconnect on page load
+  try {
+    const accounts = await getConnectedAccounts();
+    if (accounts && accounts.length) {
+      const address = accounts[0].toLowerCase();
+      const userId = getOrCreateUserIdFor(address);
+      setUserSession(address, userId);
+      console.log('Auto-reconnected to', address);
+    } else {
+      clearSession();
+    }
+  } catch (err) {
+    console.warn('Auto-reconnect failed', err);
+    clearSession();
+  }
+
+  // Listen for account changes (user switched account or disconnected)
+  if (window.ethereum && window.ethereum.on) {
+    window.ethereum.on('accountsChanged', (accounts) => {
+      if (!accounts || !accounts.length) {
+        // user disconnected or locked the wallet
+        clearSession();
+      } else {
+        const address = accounts[0].toLowerCase();
+        const userId = getOrCreateUserIdFor(address);
+        setUserSession(address, userId);
+      }
+    });
+
+    window.ethereum.on('chainChanged', (chainId) => {
+      // optional: reload or update UI
+      console.log('chain changed', chainId);
+    });
+  }
+});
+</script>
+
+<!-- example UI -->
+<div>
+  <button id="connect-btn">Connect Wallet</button>
+  <div>Address: <span id="wallet-address">not connected</span></div>
+  <div>UserId: <span id="user-id">-</span></div>
+</div>
+
+
+
+
+
+  
 <script>
 /*
   CONFIG - set these earlier in your HTML or replace here
