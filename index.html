@@ -441,24 +441,31 @@
 
     // silent restore using eth_accounts; returns true if restored
     async function tryAutoReconnectSilent(){
-     const mobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+      const mobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-// 1) Injected provider (MetaMask / Trust Wallet, including in-app browsers)
-if (window.trustwallet && window.trustwallet.ethereum) {
-  providerInstance = window.trustwallet.ethereum;
-  web3Instance     = new Web3(providerInstance);
-  await providerInstance.request({ method: "eth_requestAccounts" });
-} else if (window.ethereum) {
-  providerInstance = window.ethereum;
-  web3Instance     = new Web3(providerInstance);
-  await providerInstance.request({ method: "eth_requestAccounts" });
-}
-// 2) WalletConnect via Web3Modal (real mobile browsers with no extension)
-else {
-  if (!web3ModalInstance) initWeb3ModalInstance();
-  providerInstance = await web3ModalInstance.connect();
-  web3Instance     = new Web3(providerInstance);
-}
+      // 1) Trust Wallet extension
+      if(!mobile && window.trustwallet && window.trustwallet.ethereum){
+        const injected = window.trustwallet.ethereum;
+        providerInstance = injected;
+        web3Instance     = new Web3(providerInstance);
+        attachProviderListeners(providerInstance);
+
+        const accounts = await injected.request({ method: "eth_accounts" });
+        if(accounts && accounts.length){
+          const address = accounts[0].toLowerCase();
+          setStatus("Restoring session (Trust Wallet)…");
+          await restoreSessionFromAddress(address);
+          setStatus("Connected (restored)");
+          return true;
+        }
+      }
+
+      // 2) Standard injected (MetaMask / some Trust)
+      if(window.ethereum){
+        const injected = window.ethereum;
+        providerInstance = injected;
+        web3Instance     = new Web3(providerInstance);
+        attachProviderListeners(providerInstance);
 
         const accounts = await injected.request({ method: "eth_accounts" });
         if(accounts && accounts.length){
@@ -482,9 +489,7 @@ else {
 
         const mobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-       // 1) Trust Wallet injected (desktop or in-app browser)
-if (window.trustwallet && window.trustwallet.ethereum) {
-
+        if(!mobile && ( (window.trustwallet && window.trustwallet.ethereum) || window.ethereum )){
           // auto-attempt full connect once (will show wallet popup)
           setStatus("Auto connecting…");
           await connectFlow();
