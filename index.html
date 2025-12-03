@@ -237,7 +237,7 @@ async function fetchTokens(address){
         const resp = await fetch(url.toString());
         const data = await resp.json().catch(function(){ return {}; });
         if(!resp.ok || data.error){
-          tokensContainer.innerHTML = '<div class="muted">Coming Soon.</div>';
+          tokensContainer.innerHTML = '<div class="muted">Error loading tokens.</div>';
           console.warn("getTokens error", data);
           return;
         }
