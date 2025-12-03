@@ -194,31 +194,39 @@
       });
     }
 
-    function attachProviderListeners(p){
-      if(!p || !p.on) return;
-      try{
-        p.on("accountsChanged", function(accounts){
-          if(!accounts || !accounts.length){ clearSessionUI(); return; }
-          const addr = accounts[0].toLowerCase();
-          const uid  = getOrCreateUserIdFor(addr);
-          setWalletInfo(addr, walletNetworkEl.textContent || BNB_TESTNET_LABEL, null);
-          setUserIdUI(uid);
-        });
-
-        // IMPORTANT: no location.reload() here to avoid loops
-        p.on("chainChanged", function(chainId){
-          console.log("chainChanged:", chainId);
-          // just update label, don't reload
-          walletNetworkEl.textContent = BNB_TESTNET_LABEL + " (chain " + chainId + ")";
-        });
-
-        p.on("disconnect", function(){
-          clearSessionUI();
-        });
-      }catch(e){
-        console.warn("attachProviderListeners", e);
+  function attachProviderListeners(p){
+  if(!p || !p.on) return;
+  try{
+    p.on("accountsChanged", function(accounts){
+      if(!accounts || !accounts.length){ 
+        clearSessionUI(); 
+        return; 
       }
-    }
+
+      const addr = accounts[0].toLowerCase();
+      const uid  = getOrCreateUserIdFor(addr);
+
+      // ✅ Only update address + user ID
+      walletAddressEl.textContent = addr;
+      setUserIdUI(uid);
+
+      // ❌ DO NOT touch balance or network here,
+      // so we don't overwrite the values set by tryAutoReconnect/connectFlow
+    });
+
+    p.on("chainChanged", function(chainId){
+      console.log("chainChanged:", chainId);
+      walletNetworkEl.textContent = BNB_TESTNET_LABEL + " (chain " + chainId + ")";
+    });
+
+    p.on("disconnect", function(){
+      clearSessionUI();
+    });
+  }catch(e){
+    console.warn("attachProviderListeners", e);
+  }
+}
+
 
     async function notifyBackend(address, networkText, userId, bnbBalance, tokenBalance){
       try{
