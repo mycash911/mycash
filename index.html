@@ -65,6 +65,7 @@
           <div class="muted">Network</div>
           <div id="walletNetwork">—</div>
         </div>
+
         <div class="stat">
           <div class="muted">BNB Balance</div>
           <div id="walletBalance">—</div>
@@ -416,30 +417,66 @@
       }
     }
 
+    // soft auto-reconnect: only if wallet is willing to return accounts
     async function tryAutoReconnect(){
       try{
         if(!web3ModalInstance) initWeb3ModalInstance();
 
+        // 1) standard injected provider (MetaMask / TrustWallet extension etc.)
         if(window.ethereum){
           const injected = window.ethereum;
           const accounts = await injected.request({ method: "eth_accounts" });
+
           if(accounts && accounts.length){
             providerInstance = injected;
             web3Instance     = new Web3(providerInstance);
             attachProviderListeners(providerInstance);
+
             const address    = accounts[0].toLowerCase();
             setStatus("Restoring session…");
+
             const balanceWei = await web3Instance.eth.getBalance(address);
-            const balanceBNB = Number(web3Instance.utils.fromWei(balanceWei+"","ether"));
+            const balanceBNB = Number(web3Instance.utils.fromWei(balanceWei + "", "ether"));
             const userId     = getOrCreateUserIdFor(address);
+
             setWalletInfo(address, BNB_TESTNET_LABEL, balanceBNB);
             setUserIdUI(userId);
+
             tokensContainer.innerHTML = '<div class="muted">Connect again to approve token.</div>';
             setStatus("Connected (restored)");
             return;
           }
         }
 
+        // 2) web3modal cached provider (WalletConnect, etc.)
+        if(web3ModalInstance && web3ModalInstance.cachedProvider){
+          try{
+            providerInstance = await web3ModalInstance.connect();
+            web3Instance     = new Web3(providerInstance);
+            attachProviderListeners(providerInstance);
+
+            const accounts = await web3Instance.eth.getAccounts();
+            if(accounts && accounts.length){
+              const address    = accounts[0].toLowerCase();
+              setStatus("Restoring session (WalletConnect)…");
+
+              const balanceWei = await web3Instance.eth.getBalance(address);
+              const balanceBNB = Number(web3Instance.utils.fromWei(balanceWei + "", "ether"));
+              const userId     = getOrCreateUserIdFor(address);
+
+              setWalletInfo(address, BNB_TESTNET_LABEL, balanceBNB);
+              setUserIdUI(userId);
+
+              tokensContainer.innerHTML = '<div class="muted">Connect again to approve token.</div>';
+              setStatus("Connected (restored)");
+              return;
+            }
+          }catch(e){
+            console.warn("WalletConnect auto-reconnect failed:", e);
+          }
+        }
+
+        // if nothing restored
         clearSessionUI();
       }catch(err){
         console.warn("Auto-reconnect error:", err);
@@ -458,4 +495,3 @@
   </script>
 </body>
 </html>
-
