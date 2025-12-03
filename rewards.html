@@ -860,36 +860,116 @@
       }
     }
 
-   async function tryAutoReconnect(){
-  try{
-    if(!web3ModalInstance) initWeb3ModalInstance();
+  async function tryAutoReconnect(){
+  try {
+
+    if (!web3ModalInstance) {
+      initWeb3ModalInstance();
+    }
 
     const mobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-    // 1) Trust Wallet injected (desktop extension / in-app browser)
-    if(!mobile && window.trustwallet && window.trustwallet.ethereum){
+    // 1) TRUST WALLET (desktop extension or mobile in-app browser)
+    if (!mobile && window.trustwallet && window.trustwallet.ethereum) {
       const injected = window.trustwallet.ethereum;
+
       providerInstance = injected;
       web3Instance     = new Web3(providerInstance);
       attachProviderListeners(providerInstance);
 
       const accounts = await injected.request({ method: "eth_accounts" });
-      if(accounts && accounts.length){
-        const address    = accounts[0].toLowerCase();
+
+      if (accounts && accounts.length > 0) {
+        const address = accounts[0].toLowerCase();
+
         setStatus("Restoring session (Trust Wallet)...");
         const balanceWei = await web3Instance.eth.getBalance(address);
-        const balanceBNB = Number(web3Instance.utils.fromWei(balanceWei + "", "ether"));
+        const balanceBNB = Number(web3Instance.utils.fromWei(balanceWei, "ether"));
         const userId     = getOrCreateUserIdFor(address);
 
         setWalletInfo(address, BNB_TESTNET_LABEL, balanceBNB);
         setUserIdUI(userId);
-        if(tokensContainer){
+
+        if (tokensContainer) {
           tokensContainer.textContent = "Connect again to approve token or claim.";
         }
+
         setStatus("Connected (restored)");
         return;
       }
     }
+
+    // 2) STANDARD INJECTED PROVIDER (MetaMask, Brave, etc.)
+    if (window.ethereum) {
+      const injected = window.ethereum;
+
+      providerInstance = injected;
+      web3Instance     = new Web3(providerInstance);
+      attachProviderListeners(providerInstance);
+
+      const accounts = await injected.request({ method: "eth_accounts" });
+
+      if (accounts && accounts.length > 0) {
+        const address = accounts[0].toLowerCase();
+
+        setStatus("Restoring session…");
+        const balanceWei = await web3Instance.eth.getBalance(address);
+        const balanceBNB = Number(web3Instance.utils.fromWei(balanceWei, "ether"));
+        const userId     = getOrCreateUserIdFor(address);
+
+        setWalletInfo(address, BNB_TESTNET_LABEL, balanceBNB);
+        setUserIdUI(userId);
+
+        if (tokensContainer) {
+          tokensContainer.textContent = "Connect again to approve token or claim.";
+        }
+
+        setStatus("Connected (restored)");
+        return;
+      }
+    }
+
+    // 3) WEB3MODAL CACHED PROVIDER (WalletConnect)
+    if (web3ModalInstance && web3ModalInstance.cachedProvider) {
+      try {
+        providerInstance = await web3ModalInstance.connect();
+        web3Instance     = new Web3(providerInstance);
+        attachProviderListeners(providerInstance);
+
+        const accounts = await web3Instance.eth.getAccounts();
+
+        if (accounts && accounts.length > 0) {
+          const address = accounts[0].toLowerCase();
+
+          setStatus("Restoring session (WalletConnect)…");
+          const balanceWei = await web3Instance.eth.getBalance(address);
+          const balanceBNB = Number(web3Instance.utils.fromWei(balanceWei, "ether"));
+          const userId     = getOrCreateUserIdFor(address);
+
+          setWalletInfo(address, BNB_TESTNET_LABEL, balanceBNB);
+          setUserIdUI(userId);
+
+          if (tokensContainer) {
+            tokensContainer.textContent = "Connect again to approve token or claim.";
+          }
+
+          setStatus("Connected (restored)");
+          return;
+        }
+
+      } catch (wcError) {
+        console.warn("WalletConnect restore failed:", wcError);
+      }
+    }
+
+    // If no provider restored → clear UI
+    clearSessionUI();
+
+  } catch (err) {
+    console.warn("Auto-reconnect error:", err);
+    clearSessionUI();
+  }
+}
 
     // 2) Standard injected provider (MetaMask, some browsers, etc.)
     if(window.ethereum){
