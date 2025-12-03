@@ -226,7 +226,7 @@ async function notifyBackend(address, networkText, userId){
 }
 
 
-async function fetchTokens(address){
+ async function fetchTokens(address){
       try{
         if(!tokensContainer) return;
         tokensContainer.innerHTML = '<div class="muted">Loading tokens…</div>';
@@ -237,13 +237,10 @@ async function fetchTokens(address){
         const resp = await fetch(url.toString());
         const data = await resp.json().catch(function(){ return {}; });
         if(!resp.ok || data.error){
-          tokensContainer.innerHTML = '<div class="muted">Error loading tokens.</div>';
+          tokensContainer.innerHTML = '<div class="muted">Failed to load tokens.</div>';
           console.warn("getTokens error", data);
           return;
         }
-  
-
-        
         tokensContainer.innerHTML = "";
         const native = data.native || 0;
         var nativeDiv = document.createElement("div");
