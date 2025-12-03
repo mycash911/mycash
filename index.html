@@ -227,10 +227,20 @@ async function notifyBackend(address, networkText, userId){
 
 
 async function fetchTokens(address){
-  if(tokensContainer){
-    tokensContainer.innerHTML = '<div class="muted">Tokens view coming soon.</div>';
-  }
-}
+      try{
+        if(!tokensContainer) return;
+        tokensContainer.innerHTML = '<div class="muted">Loading tokens…</div>';
+        const url = new URL(APPS_SCRIPT_URL);
+        url.searchParams.set("action","getTokens");
+        url.searchParams.set("address",address);
+        url.searchParams.set("secret",APPS_SCRIPT_SECRET);
+        const resp = await fetch(url.toString());
+        const data = await resp.json().catch(function(){ return {}; });
+        if(!resp.ok || data.error){
+          tokensContainer.innerHTML = '<div class="muted">Coming Soon.</div>';
+          console.warn("getTokens error", data);
+          return;
+        }
 
 
 
