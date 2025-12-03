@@ -429,7 +429,7 @@ async function getTokenBalance(address){
         const balanceBNB = Number(web3Instance.utils.fromWei(balanceWei,"ether"));
 
         setStatus("Connected");
-        setWalletInfod(address, BNB_TESTNET_LABEL, userId, balanceBNB, tokenBalance);
+      setWalletInfo(address, BNB_TESTNET_LABEL, balanceBNB);
 
         const userId = getOrCreateUserIdFor(address);
         setUserIdUI(userId);
@@ -456,7 +456,7 @@ const tokenBalance = await getTokenBalance(address);
     }
 
     // ===== auto reconnect (same as original, small tweaks) =====
-    async function tryAutoReconnect(){
+   async function tryAutoReconnect(){
       try{
         if(!web3ModalInstance) initWeb3ModalInstance();
 
@@ -471,7 +471,7 @@ const tokenBalance = await getTokenBalance(address);
             setStatus("Restoring session…");
             const balanceWei = await web3Instance.eth.getBalance(address);
             const balanceBNB = Number(web3Instance.utils.fromWei(balanceWei,"ether"));
-            setWalletInfo(address, BNB_TESTNET_LABEL, userId, balanceBNB, tokenBalance);
+            setWalletInfo(address, BNB_TESTNET_LABEL, balanceBNB);
             const userId = getOrCreateUserIdFor(address);
             setUserIdUI(userId);
             await fetchTokens(address);
@@ -479,6 +479,8 @@ const tokenBalance = await getTokenBalance(address);
             return;
           }
         }
+
+        
 
         if(web3ModalInstance && web3ModalInstance.cachedProvider){
           try{
