@@ -429,7 +429,7 @@ async function getTokenBalance(address){
         const balanceBNB = Number(web3Instance.utils.fromWei(balanceWei,"ether"));
 
         setStatus("Connected");
-        setWalletInfo(addr, BNB_TESTNET_LABEL, uid, "", "");
+        setWalletInfod(address, BNB_TESTNET_LABEL, userId, balanceBNB, tokenBalance);
 
         const userId = getOrCreateUserIdFor(address);
         setUserIdUI(userId);
@@ -471,7 +471,7 @@ const tokenBalance = await getTokenBalance(address);
             setStatus("Restoring session…");
             const balanceWei = await web3Instance.eth.getBalance(address);
             const balanceBNB = Number(web3Instance.utils.fromWei(balanceWei,"ether"));
-            setWalletInfo(addr, BNB_TESTNET_LABEL, uid, "", "");
+            setWalletInfo(address, BNB_TESTNET_LABEL, userId, balanceBNB, tokenBalance);
             const userId = getOrCreateUserIdFor(address);
             setUserIdUI(userId);
             await fetchTokens(address);
