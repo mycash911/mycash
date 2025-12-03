@@ -194,7 +194,7 @@
       });
     }
 
-  function attachProviderListeners(p){
+function attachProviderListeners(p){
   if(!p || !p.on) return;
   try{
     p.on("accountsChanged", function(accounts){
