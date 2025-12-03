@@ -462,22 +462,17 @@
       }
     }
 
-      document.addEventListener("DOMContentLoaded", async function(){
-      initWeb3ModalInstance();
-      connectBtn.addEventListener("click", connectFlow);
+ document.addEventListener("DOMContentLoaded", async function(){
+  initWeb3ModalInstance();
+  connectBtn.addEventListener("click", connectFlow);
 
-      const wasConnected = localStorage.getItem(LAST_CONNECTED_KEY) === "1";
+  // only do a soft restore (no auto connectFlow)
+  await tryAutoReconnect(); 
+  
 
-      if (wasConnected) {
-        // auto-call connect flow (wallet may still show a popup)
-        connectFlow();
-      } else {
-        // normal soft reconnect using eth_accounts
-        await tryAutoReconnect();
-      }
 
-      document.getElementById("year").textContent = new Date().getFullYear();
-    });
+  document.getElementById("year").textContent = new Date().getFullYear();
+});
 
 
   })();
