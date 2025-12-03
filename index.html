@@ -482,7 +482,9 @@ else {
 
         const mobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-        if(!mobile && ( (window.trustwallet && window.trustwallet.ethereum) || window.ethereum )){
+       // 1) Trust Wallet injected (desktop or in-app browser)
+if (window.trustwallet && window.trustwallet.ethereum) {
+
           // auto-attempt full connect once (will show wallet popup)
           setStatus("Auto connecting…");
           await connectFlow();
