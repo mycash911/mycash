@@ -241,10 +241,9 @@ async function fetchTokens(address){
           console.warn("getTokens error", data);
           return;
         }
-      }
+  
 
-
-        }
+        
         tokensContainer.innerHTML = "";
         const native = data.native || 0;
         var nativeDiv = document.createElement("div");
