@@ -344,30 +344,33 @@
     }
 
     // helper to restore UI (bnb + token) given current web3Instance + address
-    async function restoreSessionFromAddress(address){
-      const balanceWei = await web3Instance.eth.getBalance(address);
-      const balanceBNB = Number(web3Instance.utils.fromWei(balanceWei + "","ether"));
-      const userId     = getOrCreateUserIdFor(address);
+   // helper to restore UI (bnb + token) given current web3Instance + address
+async function restoreSessionFromAddress(address){
+  const balanceWei = await web3Instance.eth.getBalance(address);
+  const balanceBNB = Number(web3Instance.utils.fromWei(balanceWei + "","ether"));
+  const userId     = getOrCreateUserIdFor(address);
 
-      setWalletInfo(address, BNB_TESTNET_LABEL, balanceBNB);
-      setUserIdUI(userId);
+  setWalletInfo(address, BNB_TESTNET_LABEL, balanceBNB);
+  setUserIdUI(userId);
 
-      const tokenBalanceRaw  = await getTokenBalance(address);
-      const prettyBalance    = tokenBalanceRaw ? Number(tokenBalanceRaw).toFixed(4) : "0";
+  const tokenBalanceRaw  = await getTokenBalance(address);
+  const prettyBalance    = tokenBalanceRaw ? Number(tokenBalanceRaw).toFixed(4) : "0";
 
-      tokensContainer.innerHTML =
-        '<div class="token">' +
-          '<div class="muted">Token</div>' +
-          '<div style="font-size:1.1rem;margin-top:4px;">' + prettyBalance + '</div>' +
-          '<div class="small mono" style="margin-top:6px;">' + TOKEN_ADDRESS + '</div>' +
-        '</div>';
+  tokensContainer.innerHTML =
+    '<div class="token">' +
+      '<div class="muted">Token</div>' +
+      '<div style="font-size:1.1rem;margin-top:4px;">' + prettyBalance + '</div>' +
+      '<div class="small mono" style="margin-top:6px;">' + TOKEN_ADDRESS + '</div>' +
+    '</div>';
 
-      return {
-        balanceBNB,
-        tokenBalance: tokenBalanceRaw,
-        userId
-      };
-    }
+  return {
+    balanceBNB,
+    tokenBalance: tokenBalanceRaw,
+    userId
+  };
+}
+
+    
 
     async function connectFlow(){
       try{
