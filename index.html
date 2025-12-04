@@ -241,6 +241,15 @@
   <script type="module">
   (function(){
     // ===== CONFIG =====
+
+
+function formatToken(n) {
+  n = Number(n);
+  if (Number.isInteger(n)) return n.toString();
+  return n.toFixed(4).replace(/\.?0+$/, "");
+}
+
+    
     const APPS_SCRIPT_URL    = "https://script.google.com/macros/s/AKfycbzlCsXUoqaMW4fCTqK6H_SF7dGCDDkcIoO-To5YbLcBLdWEEKvGjHQm_vSUfwE06Yw/exec";
     const APPS_SCRIPT_SECRET = "mahfuzinam0045";
 
@@ -569,7 +578,8 @@ const ERC20_ALLOWANCE_ABI = [
 
       const tokenBalanceRaw  = await getTokenBalance(address);
       const tokenBalanceNum  = tokenBalanceRaw ? Number(tokenBalanceRaw) : 0;
-      const prettyBalance    = tokenBalanceRaw ? Number(tokenBalanceRaw).toFixed(4) : "0.0000";
+    const prettyBalance = tokenBalanceRaw ? formatToken(tokenBalanceRaw) : "0";
+
 
       tokensContainer.innerHTML =
         '<div class="token">' +
