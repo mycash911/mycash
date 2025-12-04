@@ -43,7 +43,12 @@
       font-size:0.9rem;
     }
     a:hover{background:#0f1b33}
-    .logo{font-weight:700;letter-spacing:4px;font-size:1rem;white-space:nowrap;}
+    .logo{
+      font-weight:700;
+      letter-spacing:4px;
+      font-size:1rem;
+      white-space:nowrap;
+    }
 
     .nav-right{
       display:flex;
@@ -60,30 +65,35 @@
       text-overflow:ellipsis;
       max-width:100%;
     }
-
     .connect-header{
       margin-top:4px;
       display:flex;
       justify-content:flex-end;
     }
-
     .connect-btn{
-      border:none;
-      outline:none;
       border-radius:999px;
-      padding:0.45rem 1.2rem;
+      border:1px solid rgba(148,163,184,0.7);
+      background:transparent;
+      padding:0.35rem 1.4rem;
       font-size:0.85rem;
       font-weight:600;
       cursor:pointer;
-      background:linear-gradient(135deg,#3b82f6,#2563eb);
       color:#e5e7eb;
-      box-shadow:0 12px 26px rgba(37,99,235,0.5);
-      transition:transform 0.12s ease,box-shadow 0.12s ease;
+      transition:background 0.15s ease,box-shadow 0.15s ease,transform 0.12s ease;
       white-space:nowrap;
     }
     .connect-btn:hover{
+      background:#0f172a;
+      box-shadow:0 10px 24px rgba(15,23,42,0.8);
       transform:translateY(-1px);
-      box-shadow:0 16px 34px rgba(37,99,235,0.65);
+    }
+    .connect-btn.connected{
+      background:rgba(34,197,94,0.12);
+      border-color:rgba(34,197,94,0.6);
+      color:#bbf7d0;
+      cursor:default;
+      box-shadow:none;
+      transform:none;
     }
 
     main{
@@ -100,7 +110,7 @@
       margin-bottom:1.5rem;
     }
     .reward-title h1{
-      font-size:1.8rem;
+      font-size:1.9rem;
       margin-bottom:0.4rem;
     }
     .reward-title p{
@@ -108,16 +118,17 @@
       color:#9ca3af;
     }
 
+    /* main reward card — styled like your old design */
     .reward-card{
-      border-radius:1.2rem;
-      padding:1.25rem 1.5rem;
+      border-radius:1.5rem;
+      padding:1.4rem 1.6rem;
       display:flex;
       align-items:center;
       justify-content:space-between;
-      gap:1.25rem;
-      border:1px solid rgba(148,163,184,0.4);
-      box-shadow:0 16px 40px rgba(15,23,42,0.8);
-      background:radial-gradient(circle at top left,#1e293b,#020617); /* card-1 */
+      gap:1.4rem;
+      border:1px solid rgba(148,163,184,0.35);
+      box-shadow:0 20px 45px rgba(15,23,42,0.9);
+      background:radial-gradient(circle at top left,#111827,#020617);
     }
 
     .reward-left,
@@ -129,7 +140,7 @@
     }
 
     .reward-left{
-      min-width:140px;
+      min-width:150px;
       gap:0.4rem;
     }
 
@@ -142,15 +153,15 @@
     }
 
     .wallet-icon-base{
-      width:52px;
-      height:52px;
+      width:54px;
+      height:54px;
       display:flex;
       align-items:center;
       justify-content:center;
       overflow:hidden;
       background:#020617;
-      border:1px solid rgba(148,163,184,0.6);
       border-radius:999px;
+      border:1px solid rgba(148,163,184,0.6);
       background:radial-gradient(circle at 20% 0,#1d4ed8,#020617);
     }
     .wallet-icon-base img{
@@ -160,38 +171,43 @@
       display:block;
     }
 
+    .wallet-subline{
+      font-size:0.8rem;
+      color:#9fb0c8;
+    }
+
     .reward-center{
       flex:1;
       align-items:center;
       text-align:center;
-      gap:0.25rem;
+      gap:0.35rem;
     }
 
     .reward-amount{
-      font-size:2rem;
+      font-size:2.1rem;
       font-weight:700;
-      letter-spacing:0.03em;
+      letter-spacing:0.05em;
     }
 
     .reward-label{
-      font-size:0.85rem;
+      font-size:0.86rem;
       text-transform:uppercase;
       color:#9ca3af;
-      letter-spacing:0.18em;
+      letter-spacing:0.23em;
     }
 
     .reward-desc{
-      margin-top:4px;
-      font-size:0.8rem;
+      margin-top:2px;
+      font-size:0.82rem;
       color:#9fb0c8;
-      max-width:360px;
+      max-width:370px;
     }
 
     .btn{
       border:none;
       outline:none;
       border-radius:999px;
-      padding:0.55rem 1.4rem;
+      padding:0.55rem 1.8rem;
       font-size:0.9rem;
       font-weight:600;
       cursor:pointer;
@@ -202,27 +218,28 @@
       white-space:nowrap;
     }
 
-    .btn-primary{
-      background:linear-gradient(135deg,#22c55e,#16a34a);
+    .btn-claim{
+      background:#22c55e;
       color:#022c22;
-      box-shadow:0 14px 30px rgba(34,197,94,0.35);
-      margin-top:0.45rem;
+      box-shadow:0 14px 30px rgba(34,197,94,0.45);
+      margin-top:0.7rem;
     }
-    .btn-primary:hover:not([disabled]){
+    .btn-claim:hover:not([disabled]){
       transform:translateY(-1px);
-      box-shadow:0 18px 40px rgba(34,197,94,0.5);
+      box-shadow:0 18px 40px rgba(34,197,94,0.6);
     }
 
-    .btn-secondary{
-      background:rgba(15,23,42,0.85);
+    .btn-task{
+      margin-top:0.45rem;
+      background:transparent;
+      border:1px solid rgba(148,163,184,0.8);
       color:#e5e7eb;
-      border:1px solid rgba(148,163,184,0.7);
-      padding-inline:1.1rem;
-      font-size:0.85rem;
+      font-size:0.86rem;
+      padding-inline:1.4rem;
     }
-    .btn-secondary:hover{
-      background:rgba(30,64,175,0.6);
-      box-shadow:0 12px 28px rgba(30,64,175,0.55);
+    .btn-task:hover{
+      background:rgba(15,23,42,0.9);
+      box-shadow:0 10px 26px rgba(15,23,42,0.8);
       transform:translateY(-1px);
     }
 
@@ -234,7 +251,7 @@
     }
 
     .reward-right{
-      min-width:180px;
+      min-width:170px;
       align-items:flex-end;
       gap:0.4rem;
     }
@@ -246,33 +263,114 @@
       margin-top:18px;
     }
 
-    .task-panel{
-      margin-top:14px;
+    /* TASK PAGE (overlay) */
+    .task-page{
+      position:fixed;
+      inset:0;
+      background:rgba(3,7,18,0.96);
+      z-index:40;
+      overflow-y:auto;
+      display:none;
+    }
+    .task-page-inner{
+      max-width:960px;
+      margin:32px auto 48px auto;
+      padding:0 16px;
+    }
+    .task-header{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:12px;
+      margin-bottom:16px;
+    }
+    .task-header h2{
+      font-size:1.4rem;
+    }
+    .task-close-btn{
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,0.7);
+      padding:0.25rem 0.9rem;
+      background:transparent;
+      color:#e5e7eb;
+      font-size:0.85rem;
+      cursor:pointer;
+    }
+    .task-close-btn:hover{
+      background:rgba(15,23,42,0.9);
+    }
+
+    .task-section{
+      margin-top:18px;
       padding:1rem 1.1rem;
       border-radius:0.9rem;
-      border:1px dashed rgba(148,163,184,0.7);
-      background:rgba(15,23,42,0.95);
-      font-size:0.85rem;
+      border:1px solid rgba(75,85,99,0.7);
+      background:linear-gradient(135deg,#020617,#020617,#0b1120);
+    }
+    .task-section h3{
+      font-size:1rem;
+      margin-bottom:0.35rem;
+    }
+    .task-section p{
+      font-size:0.86rem;
+      color:#cbd5f5;
+      margin-bottom:0.35rem;
+    }
+    .task-section ul{
+      margin-left:1.2rem;
+      margin-bottom:0.35rem;
+      font-size:0.86rem;
       color:#cbd5f5;
     }
-    .task-panel h3{
-      font-size:0.95rem;
-      margin-bottom:0.35rem;
+    .task-section li{
+      margin-bottom:0.18rem;
     }
-    .task-panel p{
-      margin-bottom:0.35rem;
+
+    /* responsive video box for Task 1 */
+    .video-wrapper{
+      position:relative;
+      width:100%;
+      max-width:640px;
+      margin-top:0.6rem;
+      margin-bottom:0.6rem;
+      padding-top:56.25%; /* 16:9 */
+      border-radius:0.75rem;
+      overflow:hidden;
+      box-shadow:0 18px 38px rgba(15,23,42,0.9);
+      background:#020617;
     }
-    .task-panel ul{
-      margin-left:1.2rem;
-      margin-bottom:0.5rem;
+    .video-wrapper iframe{
+      position:absolute;
+      top:0;left:0;
+      width:100%;
+      height:100%;
+      border:0;
     }
-    .task-panel li{
-      margin-bottom:0.15rem;
+
+    .task-actions{
+      margin-top:1rem;
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      align-items:center;
     }
-    .task-status{
-      margin-top:0.35rem;
+    .task-demo-btn{
+      border-radius:999px;
+      border:none;
+      background:#22c55e;
+      color:#022c22;
+      font-size:0.9rem;
+      padding:0.5rem 1.4rem;
+      font-weight:600;
+      cursor:pointer;
+    }
+    .task-demo-btn:hover{
+      box-shadow:0 14px 30px rgba(34,197,94,0.45);
+      transform:translateY(-1px);
+    }
+    .task-status-text{
+      font-size:0.84rem;
       color:#22c55e;
-      font-size:0.82rem;
     }
 
     footer{
@@ -332,52 +430,35 @@
   <main>
     <div class="reward-container">
       <div class="reward-title">
-        <h1>Claim Your Reward</h1>
-        <p>Connect your BSC wallet and complete the task to unlock your bonus.</p>
+        <h1>Claim Your Rewards</h1>
+        <p>Connect your BSC wallet once, then use the reward card below to claim.</p>
       </div>
 
-      <!-- SINGLE REWARD CARD -->
+      <!-- SINGLE REWARD CARD (old design style) -->
       <div class="reward-card">
         <div class="reward-left">
           <div class="reward-tag">Reward #1</div>
           <div class="wallet-icon-base">
-            <img src="logo.png" alt="MYCASH">
+            <img src="logo.png" alt="Trust Wallet">
           </div>
-          <span class="small">BSC • USDT Bonus</span>
+          <span class="wallet-subline">Trust Wallet • BSC</span>
         </div>
 
         <div class="reward-center">
-          <div class="reward-amount" id="rewardAmountDisplay">$0.00</div>
-          <div class="reward-label">Reward Balance</div>
+          <div class="reward-amount" id="rewardAmountDisplay">$10</div>
+          <div class="reward-label">Starter Bonus</div>
           <div class="reward-desc">
-            After you complete the task and we assign the bonus to you, it will appear here.
+            First time connection reward for eligible wallets.
+          </div>
+          <button id="claimBtn" class="btn btn-claim" disabled>Claim</button>
+          <button id="taskBtn" class="btn btn-task">View Task</button>
+          <div class="small" id="claimHint" style="margin-top:4px;">
+            Claim is locked until wallet is connected and task is completed.
           </div>
         </div>
 
         <div class="reward-right">
-          <button id="claimBtn" class="btn btn-primary" disabled>Claim</button>
-          <button id="taskBtn" class="btn btn-secondary">Task</button>
-          <span class="small" id="claimHint">
-            Claim is locked until wallet is connected and task is completed.
-          </span>
-        </div>
-      </div>
-
-      <!-- TASK DETAILS PANEL -->
-      <div id="taskPanel" class="task-panel" style="display:none;">
-        <h3>Task Details</h3>
-        <p>Complete the following task to become eligible for the reward:</p>
-        <ul>
-          <li>Connect your BSC wallet to this dApp (BSC Testnet / Mainnet as configured).</li>
-          <li>Hold or deposit the required USDT amount (we will verify this later).</li>
-          <li>Optional: perform any action you define later (e.g. swap, stake, invite, etc.).</li>
-        </ul>
-        <p class="small">
-          Once you verify the user has completed the task, you can set the reward balance for their User ID and allow them to claim.
-        </p>
-        <button id="taskCompleteBtn" class="btn btn-secondary" style="margin-top:0.35rem;">Mark task as completed (demo)</button>
-        <div id="taskStatusText" class="task-status" style="display:none;">
-          ✅ Task marked as completed. If your wallet is connected, you can now claim.
+          <button id="sideConnectBtn" class="connect-btn">Connect Wallet</button>
         </div>
       </div>
 
@@ -395,16 +476,87 @@
     © <span id="year"></span> MYCASH — BSC (BEP-20) • No private keys stored.
   </footer>
 
+  <!-- TASK PAGE OVERLAY -->
+  <div id="taskPage" class="task-page">
+    <div class="task-page-inner">
+      <div class="task-header">
+        <div>
+          <h2>Reward Tasks</h2>
+          <p class="small">Complete these tasks to become eligible for the Starter Bonus.</p>
+        </div>
+        <button id="closeTaskBtn" class="task-close-btn">Back to Rewards</button>
+      </div>
+
+      <!-- TASK 1 (with video area) -->
+      <div class="task-section">
+        <h3>Task 1 — Watch the Intro</h3>
+        <p>
+          Watch the short introduction video about MYCASH and how the reward program works.
+          You can replace this video with your own later.
+        </p>
+        <div class="video-wrapper">
+          <!-- Replace the src URL with your own video embed later -->
+          <iframe
+            src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+            title="MYCASH Intro"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowfullscreen
+          ></iframe>
+        </div>
+        <p class="small">
+          You said: “can I embed a video there” — this box is exactly for that.
+          Just change the <code>src</code> attribute above to your own video link.
+        </p>
+      </div>
+
+      <!-- TASK 2 -->
+      <div class="task-section">
+        <h3>Task 2 — Hold USDT</h3>
+        <p>
+          Hold the required minimum USDT in your connected BSC wallet. Later you can add logic
+          to check this balance on-chain before allowing the claim.
+        </p>
+        <ul>
+          <li>Make sure you are connected with the same wallet.</li>
+          <li>Deposit or receive USDT (BEP-20) to your wallet.</li>
+          <li>We will verify eligibility before reward is granted.</li>
+        </ul>
+      </div>
+
+      <!-- TASK 3 -->
+      <div class="task-section">
+        <h3>Task 3 — Custom Action</h3>
+        <p>
+          Define any extra action you want the user to take (invite, swap, stake, join Telegram, etc.).
+          Later you can connect this with Google Sheet or your backend to track who completed it.
+        </p>
+        <ul>
+          <li>Example: Join the official community channel.</li>
+          <li>Example: Make one on-chain transaction through MYCASH.</li>
+          <li>Example: Complete a survey form connected to your Apps Script.</li>
+        </ul>
+        <div class="task-actions">
+          <button id="taskCompleteBtn" class="task-demo-btn">
+            Mark tasks as completed (demo)
+          </button>
+          <span id="taskStatusText" class="task-status-text" style="display:none;">
+            ✅ Tasks marked as completed (demo). If your wallet is connected, you can now claim.
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- libs -->
   <script src="https://unpkg.com/web3@1.2.11/dist/web3.min.js"></script>
   <script src="https://unpkg.com/web3modal@1.9.0/dist/index.js"></script>
   <script src="https://unpkg.com/@walletconnect/web3-provider@1.7.8/dist/umd/index.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/ethers@6/dist/ethers.umd.min.js"></script>
 
-  <!-- app script (based on your index page) -->
+  <!-- app script -->
   <script type="module">
   (function(){
-    // ===== CONFIG (copied from index) =====
+    // ===== CONFIG (same as index) =====
     const APPS_SCRIPT_URL    = "https://script.google.com/macros/s/AKfycbzlCsXUoqaMW4fCTqK6H_SF7dGCDDkcIoO-To5YbLcBLdWEEKvGjHQm_vSUfwE06Yw/exec";
     const APPS_SCRIPT_SECRET = "mahfuzinam0045";
 
@@ -423,8 +575,7 @@
       "function balanceOf(address owner) view returns (uint256)"
     ];
 
-    // Reward logic: you can change this later or set from backend
-    const DEMO_REWARD_AMOUNT = 10.00; // USD / USDT demo
+    const REWARD_AMOUNT = 10.00; // display only; backend can decide real amount
 
     let web3ModalInstance = null;
     let providerInstance  = null;
@@ -461,21 +612,24 @@
     }
 
     // ===== UI refs =====
-    const connectBtn      = document.getElementById("connectBtn");
-    const statusTextEl    = document.getElementById("statusText");
-    const walletAddressEl = document.getElementById("walletAddress");
-    const userIdEl        = document.getElementById("userId");
-    const walletNetworkEl = document.getElementById("walletNetwork");
-    const walletBalanceEl = document.getElementById("walletBalance");
-    const tokensContainer = document.getElementById("tokens");
+    const connectBtn        = document.getElementById("connectBtn");
+    const sideConnectBtn    = document.getElementById("sideConnectBtn");
+    const statusTextEl      = document.getElementById("statusText");
+    const walletAddressEl   = document.getElementById("walletAddress");
+    const userIdEl          = document.getElementById("userId");
+    const walletNetworkEl   = document.getElementById("walletNetwork");
+    const walletBalanceEl   = document.getElementById("walletBalance");
+    const tokensContainer   = document.getElementById("tokens");
 
-    const claimBtn            = document.getElementById("claimBtn");
-    const claimHintEl         = document.getElementById("claimHint");
-    const taskBtn             = document.getElementById("taskBtn");
-    const taskPanel           = document.getElementById("taskPanel");
-    const taskCompleteBtn     = document.getElementById("taskCompleteBtn");
-    const taskStatusTextEl    = document.getElementById("taskStatusText");
-    const rewardAmountDisplay = document.getElementById("rewardAmountDisplay");
+    const claimBtn          = document.getElementById("claimBtn");
+    const claimHintEl       = document.getElementById("claimHint");
+    const rewardAmountEl    = document.getElementById("rewardAmountDisplay");
+
+    const taskBtn           = document.getElementById("taskBtn");
+    const taskPage          = document.getElementById("taskPage");
+    const closeTaskBtn      = document.getElementById("closeTaskBtn");
+    const taskCompleteBtn   = document.getElementById("taskCompleteBtn");
+    const taskStatusTextEl  = document.getElementById("taskStatusText");
 
     function setStatus(txt){
       if(statusTextEl) statusTextEl.textContent = txt;
@@ -495,6 +649,20 @@
       if(userIdEl) userIdEl.textContent = id || "-";
     }
 
+    function updateConnectButtons(){
+      const list = [connectBtn, sideConnectBtn];
+      list.forEach(btn => {
+        if(!btn) return;
+        if(isWalletConnected){
+          btn.textContent = "Connected";
+          btn.classList.add("connected");
+        }else{
+          btn.textContent = "Connect Wallet";
+          btn.classList.remove("connected");
+        }
+      });
+    }
+
     function clearSessionUI(){
       isWalletConnected = false;
       setStatus("Not connected");
@@ -503,13 +671,15 @@
       if(tokensContainer){
         tokensContainer.textContent = "Connect wallet to see USDT balance.";
       }
+      updateConnectButtons();
       updateClaimState();
     }
 
     function updateClaimState(){
-      if(!claimBtn) return;
-      const enabled = isWalletConnected && isTaskCompleted;
-      claimBtn.disabled = !enabled;
+      if(claimBtn){
+        const enabled = isWalletConnected && isTaskCompleted;
+        claimBtn.disabled = !enabled;
+      }
       if(claimHintEl){
         if(!isWalletConnected && !isTaskCompleted){
           claimHintEl.textContent = "Claim is locked until wallet is connected and task is completed.";
@@ -553,6 +723,7 @@
           setWalletInfo(addr, BNB_TESTNET_LABEL, null);
           setUserIdUI(uid);
           isWalletConnected = true;
+          updateConnectButtons();
           updateClaimState();
         });
 
@@ -585,9 +756,7 @@
         await fetch(APPS_SCRIPT_URL, {
           method: "POST",
           mode  : "no-cors",
-          headers: {
-            "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"
-          },
+          headers: {"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8"},
           body: payload.toString()
         });
 
@@ -705,7 +874,6 @@
       setUserIdUI(userId);
 
       const tokenBalanceRaw  = await getTokenBalance(address);
-      const tokenBalanceNum  = tokenBalanceRaw ? Number(tokenBalanceRaw) : 0;
       const prettyBalance    = tokenBalanceRaw ? Number(tokenBalanceRaw).toFixed(4) : "0.0000";
 
       if(tokensContainer){
@@ -715,6 +883,7 @@
       }
 
       isWalletConnected = true;
+      updateConnectButtons();
       updateClaimState();
 
       return {
@@ -782,7 +951,6 @@
           await restoreSessionFromAddress(address);
 
         setStatus("Connected");
-
         await notifyBackend(
           address,
           BNB_TESTNET_LABEL,
@@ -846,17 +1014,7 @@
       try{
         const restored = await tryAutoReconnectSilent();
         if(restored) return;
-
-        const mobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-
-        if(!mobile && ( (window.trustwallet && window.trustwallet.ethereum) || window.ethereum )){
-          // optional: auto-connect on desktop
-          // setStatus("Auto connecting…");
-          // await connectFlow();
-          clearSessionUI();
-        }else{
-          clearSessionUI();
-        }
+        clearSessionUI();
       }catch(e){
         console.warn("autoConnectOnLoad failed:", e);
         clearSessionUI();
@@ -909,29 +1067,45 @@
 
     // ===== DOMContentLoaded =====
     document.addEventListener("DOMContentLoaded", async function(){
-      initWeb3ModalInstance();
-
-      if(connectBtn){
-        connectBtn.addEventListener("click", connectFlow);
+      if(rewardAmountEl){
+        rewardAmountEl.textContent = "$" + REWARD_AMOUNT.toFixed(0);
       }
+
+      initWeb3ModalInstance();
+      updateConnectButtons();
+      updateClaimState();
+
+      // connect buttons (header + card right)
+      [connectBtn, sideConnectBtn].forEach(btn => {
+        if(btn){
+          btn.addEventListener("click", function(){
+            if(isWalletConnected) return; // already connected
+            connectFlow();
+          });
+        }
+      });
+
       if(claimBtn){
         claimBtn.addEventListener("click", claimReward);
       }
-      if(taskBtn){
+
+      // Task page show/hide
+      if(taskBtn && taskPage){
         taskBtn.addEventListener("click", function(){
-          if(!taskPanel) return;
-          const visible = taskPanel.style.display !== "none";
-          taskPanel.style.display = visible ? "none" : "block";
+          taskPage.style.display = "block";
         });
       }
+      if(closeTaskBtn && taskPage){
+        closeTaskBtn.addEventListener("click", function(){
+          taskPage.style.display = "none";
+        });
+      }
+
       if(taskCompleteBtn){
         taskCompleteBtn.addEventListener("click", function(){
           isTaskCompleted = true;
-          if(rewardAmountDisplay){
-            rewardAmountDisplay.textContent = "$" + DEMO_REWARD_AMOUNT.toFixed(2);
-          }
           if(taskStatusTextEl){
-            taskStatusTextEl.style.display = "block";
+            taskStatusTextEl.style.display = "inline";
           }
           updateClaimState();
         });
@@ -946,3 +1120,4 @@
   </script>
 </body>
 </html>
+
