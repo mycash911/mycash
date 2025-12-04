@@ -539,6 +539,8 @@
     ];
     const ERC20_BALANCE_ABI = [
       "function balanceOf(address owner) view returns (uint256)"
+      const TOKEN_DECIMALS = 6; // <-- change to whatever your fusdt uses
+
     ];
 
     const REQUIRED_USDT = 10;   // Task 2: need at least this much
@@ -744,7 +746,8 @@
         const ethersProvider = new ethers.BrowserProvider(providerInstance);
         const tokenContract  = new ethers.Contract(TOKEN_ADDRESS, ERC20_BALANCE_ABI, ethersProvider);
         const raw            = await tokenContract.balanceOf(address);
-        const formatted      = ethers.formatUnits(raw, 18);
+       const formatted = ethers.formatUnits(raw, TOKEN_DECIMALS);
+
         return formatted;
       }catch(err){
         console.error("getTokenBalance error:", err);
