@@ -175,6 +175,28 @@
       max-width:370px;
     }
 
+.connected-pill{
+  margin-top:6px;
+  padding:4px 12px;
+  border-radius:999px;
+  font-size:0.8rem;
+  background:rgba(34,197,94,0.15);
+  border:1px solid rgba(34,197,94,0.7);
+  color:#bbf7d0;
+  display:inline-flex;
+  align-items:center;
+  gap:6px;
+}
+.connected-pill::before{
+  content:"";
+  width:6px;
+  height:6px;
+  border-radius:999px;
+  background:#22c55e;
+}
+
+    
+
     .btn{
       border:none;
       outline:none;
@@ -423,10 +445,15 @@
           </div>
         </div>
 
-        <div class="reward-right">
-          <!-- we reuse same connect button in header, this right side just shows note -->
-          <span class="small">Use the top button to connect your wallet.</span>
-        </div>
+       <div class="reward-right">
+  <span id="connectHintCard" class="small">
+    Use the top button to connect your wallet.
+  </span>
+  <span id="connectedPill" class="connected-pill" style="display:none;">
+    ● Connected
+  </span>
+</div>
+
       </div>
 
       <div class="reward-extra">
@@ -611,6 +638,12 @@ const ERC20_ALLOWANCE_ABI = [
 
     const claimBtn        = document.getElementById("claimBtn");
     const claimHintEl     = document.getElementById("claimHint");
+
+const connectHintCardEl = document.getElementById("connectHintCard");
+const connectedPillEl   = document.getElementById("connectedPill");
+
+
+    
     const rewardAmountEl  = document.getElementById("rewardAmountDisplay");
 
     const task1Btn        = document.getElementById("task1Btn");
@@ -643,6 +676,13 @@ const ERC20_ALLOWANCE_ABI = [
       setStatus("Not connected");
       setWalletInfo("—","—",null);
       setUserIdUI("-");
+      if(connectHintCardEl){
+  connectHintCardEl.textContent = "Use the top button to connect your wallet.";
+}
+if(connectedPillEl){
+  connectedPillEl.style.display = "none";
+}
+
       if(tokensContainer){
         tokensContainer.textContent = "Connect wallet to see USDT balance.";
       }
@@ -883,6 +923,13 @@ const ERC20_ALLOWANCE_ABI = [
       if(connectBtn){
         connectBtn.textContent = "Connected";
         connectBtn.classList.add("connected");
+        if(connectHintCardEl){
+  connectHintCardEl.textContent = "Wallet connected.";
+}
+if(connectedPillEl){
+  connectedPillEl.style.display = "inline-flex";
+}
+
       }
 
       updateClaimState();
