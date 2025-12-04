@@ -241,6 +241,11 @@
   <script type="module">
   (function(){
     // ===== CONFIG =====
+function formatToken(n) {
+  n = Number(n);
+  if (Number.isInteger(n)) return n.toString();
+  return n.toFixed(4).replace(/\.?0+$/, "");
+}
 
 
 function formatToken(n) {
@@ -356,8 +361,9 @@ const ERC20_ALLOWANCE_ABI = [
       const balance = Number(usdtBalance || 0);
       const bonus   = balance * BONUS_RATE;
 
-      if (rewardBalanceEl) rewardBalanceEl.textContent = balance.toFixed(4) + " USDT";
-      if (rewardBonusEl)   rewardBonusEl.textContent   = bonus.toFixed(4)   + " USDT";
+     rewardBalanceEl.textContent = formatToken(balance) + " USDT";
+rewardBonusEl.textContent   = formatToken(bonus) + " USDT";
+
       if (rewardHintEl)    rewardHintEl.textContent    = "This is an estimated bonus based on your current USDT balance.";
 
       const ratio = Math.max(0, Math.min(balance / MAX_USDT_FOR_GAUGE, 1)); // 0–1
