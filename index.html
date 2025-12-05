@@ -7,7 +7,15 @@
   <style>
     body{font-family:system-ui,Segoe UI,Arial;background:#0b1220;color:#e6eef8;margin:0}
     header{background:#071027;padding:12px 16px;position:sticky;top:0;z-index:20;border-bottom:1px solid rgba(255,255,255,0.03)}
-    .nav{max-width:980px;margin:0 auto;display:flex;align-items:center;justify-content:space-between}
+.nav{
+  max-width:980px;
+  margin:0 auto;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  flex-wrap:wrap;      /* <-- add this */
+  gap:8px;             /* <-- small spacing between rows/items */
+}
     .nav-left{display:flex;gap:14px}
     a{color:#dbeafe;text-decoration:none;padding:6px 10px;border-radius:6px}
     a:hover{background:#0f1b33}
@@ -137,6 +145,54 @@
       .gauge-wrap{flex:1 1 100%;margin-top:6px}
       .reward-info{flex:1 1 100%}
     }
+
+/* ===== Mobile header cleanup ===== */
+@media (max-width: 640px){
+  header{
+    padding:8px 10px;
+  }
+
+  .nav{
+    justify-content:center;
+    text-align:center;
+  }
+
+  .logo{
+    order:1;
+    width:100%;
+    text-align:center;
+    font-size:0.9rem;
+    letter-spacing:3px;
+    margin-bottom:4px;
+  }
+
+  .nav-left{
+    order:2;
+    width:100%;
+    display:flex;
+    justify-content:center;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+
+  header .connect{
+    order:3;
+    width:100%;
+    max-width:260px;
+    padding:8px 12px;
+    font-size:0.9rem;
+    margin:4px auto 0;
+    display:block;
+  }
+
+  header a{
+    padding:4px 8px;
+    font-size:0.85rem;
+  }
+}
+
+
+    
   </style>
 </head>
 <body>
