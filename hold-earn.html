@@ -23,65 +23,87 @@
     footer{max-width:980px;margin:24px auto;padding:12px;color:#9fb0c8;text-align:center}
     button{cursor:pointer}
 
-    /* Hold & Earn specific styles */
+    /* Hold & Earn minimal task design */
     .tasks-grid{
       display:grid;
-      grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+      grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
       gap:12px;
       margin-top:14px;
     }
     .task-card{
       background:#020617;
       border-radius:10px;
-      padding:12px;
-      border:1px solid rgba(148,163,184,0.25);
-      position:relative;
-      overflow:hidden;
+      padding:12px 14px;
+      border:1px solid rgba(148,163,184,0.3);
+      display:flex;
+      flex-direction:column;
+      gap:4px;
+      transition:border-color 0.25s ease, box-shadow 0.25s ease, transform 0.2s ease;
+    }
+    .task-card:hover{
+      transform:translateY(-2px);
+      box-shadow:0 8px 20px rgba(15,23,42,0.6);
+    }
+    .task-header{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:8px;
     }
     .task-title{
       font-weight:500;
-      margin-bottom:4px;
       font-size:0.95rem;
     }
-    .task-meta{
-      font-size:0.85rem;
-      color:#9fb0c8;
-      margin-bottom:6px;
-    }
-    .task-tag{
-      display:inline-flex;
-      align-items:center;
+    .task-status-pill{
+      font-size:0.75rem;
       padding:2px 8px;
       border-radius:999px;
-      font-size:0.75rem;
-      border:1px solid rgba(148,163,184,0.4);
+      border:1px solid rgba(148,163,184,0.5);
+      display:inline-flex;
+      align-items:center;
+      gap:5px;
+      white-space:nowrap;
     }
-    .task-card.active{
-      border-color:rgba(34,197,94,0.9);
-      box-shadow:0 0 0 1px rgba(34,197,94,0.3);
-    }
-    .task-card.active .task-tag{
-      border-color:rgba(34,197,94,0.9);
-    }
-    .task-tag-dot{
+    .status-dot{
       width:6px;
       height:6px;
       border-radius:999px;
-      margin-right:5px;
       background:#64748b;
     }
-    .task-card.active .task-tag-dot{
+    .task-body{
+      font-size:0.85rem;
+      color:#cbd5f5;
+    }
+    .task-meta{
+      font-size:0.8rem;
+      color:#9fb0c8;
+    }
+
+    /* active state = ONLY ONE at a time */
+    .task-card.active{
+      border-color:#22c55e;
+      box-shadow:0 0 0 1px rgba(34,197,94,0.4);
+      position:relative;
+    }
+    .task-card.active .status-dot{
       background:#22c55e;
     }
-    .task-locked{
-      font-size:0.8rem;
-      color:#ef4444;
-      margin-top:4px;
+    .task-card.active .task-status-pill{
+      border-color:#22c55e;
     }
-    .task-note{
-      font-size:0.75rem;
-      color:#9fb0c8;
-      margin-top:4px;
+    @keyframes activePulse {
+      0%{box-shadow:0 0 0 0 rgba(34,197,94,0.4);}
+      70%{box-shadow:0 0 0 8px rgba(34,197,94,0);}
+      100%{box-shadow:0 0 0 0 rgba(34,197,94,0);}
+    }
+    .task-card.active::after{
+      content:"";
+      position:absolute;
+      inset:0;
+      border-radius:inherit;
+      border:1px solid rgba(34,197,94,0.25);
+      pointer-events:none;
+      animation:activePulse 1.4s ease-out infinite;
     }
 
     .pill{
@@ -106,9 +128,9 @@
     <div class="nav">
       <div class="nav-left">
         <a href="index.html">Home</a>
-        <a href="hold-earn.html">Hold &amp; Earn</a>
+        <a href="hold-earn.html">HoldEarn</a>
         <a href="rewards.html">Rewards</a>
-    
+     
       </div>
       <div class="logo">MYCASH</div>
       <div>
@@ -122,12 +144,12 @@
     <div class="card">
       <h2>Hold &amp; Earn — Daily USDT Rewards</h2>
       <p class="small" style="margin-top:6px;">
-        Hold USDT in your wallet on BSC Testnet and unlock daily fixed-dollar rewards.
-        Your wallet balance will automatically unlock the highest eligible task.
+        Hold USDT in your wallet on BSC Testnet. Based on your balance,
+        <strong>one reward level</strong> will be activated at a time (highest you qualify for).
       </p>
     </div>
 
-    <!-- Wallet summary (same style as index) -->
+    <!-- Wallet summary -->
     <div class="card">
       <h3>Wallet Status</h3>
       <div class="row">
@@ -163,124 +185,162 @@
           <span id="holdUsdtBalance" class="mono">—</span>
         </div>
         <div class="pill">
-          <span class="muted">Active Task:</span>
-          <span id="holdLevelText">None (insufficient balance)</span>
+          <span class="muted">Current Level:</span>
+          <span id="holdLevelText">None</span>
         </div>
       </div>
 
       <p class="small" style="margin-top:8px;" id="holdHint">
-        Connect your wallet to detect your USDT balance and unlock Hold &amp; Earn tasks.
+        Connect your wallet to detect your USDT balance and automatically activate one Hold &amp; Earn level.
       </p>
     </div>
 
-    <!-- Tasks grid -->
+    <!-- Tasks grid: 10 → 100 -->
     <div class="card">
-      <h3>Daily Hold &amp; Earn Tasks</h3>
+      <h3>Daily Hold &amp; Earn Levels</h3>
       <p class="small" style="margin-top:4px;">
-        Each task requires a minimum USDT balance in your wallet. Tasks up to your balance will be
-        <span style="color:#22c55e;">activated</span> automatically.
+        Exactly one level will be active at a time. Higher balance = higher daily reward.
       </p>
 
       <div class="tasks-grid" id="tasksGrid">
-        <!-- Each card uses data-min-usdt and data-daily-reward for logic -->
         <div class="task-card" data-min-usdt="10" data-daily-reward="1">
-          <div class="task-title">Task 1</div>
-          <div class="task-meta">Hold <strong>$10 USDT</strong> to earn <strong>$1</strong> daily</div>
-          <div class="task-tag">
-            <span class="task-tag-dot"></span>
-            <span class="task-tag-text">Locked</span>
+          <div class="task-header">
+            <div class="task-title">Level 1</div>
+            <div class="task-status-pill">
+              <span class="status-dot"></span>
+              <span class="task-status-text">Locked</span>
+            </div>
           </div>
-          <div class="task-note">Requires at least 10 USDT in your wallet.</div>
+          <div class="task-body">
+            Hold <strong>$10 USDT</strong> to earn <strong>$1</strong> daily.
+          </div>
+          <div class="task-meta">Min balance: 10 USDT</div>
         </div>
 
         <div class="task-card" data-min-usdt="20" data-daily-reward="2">
-          <div class="task-title">Task 2</div>
-          <div class="task-meta">Hold <strong>$20 USDT</strong> to earn <strong>$2</strong> daily</div>
-          <div class="task-tag">
-            <span class="task-tag-dot"></span>
-            <span class="task-tag-text">Locked</span>
+          <div class="task-header">
+            <div class="task-title">Level 2</div>
+            <div class="task-status-pill">
+              <span class="status-dot"></span>
+              <span class="task-status-text">Locked</span>
+            </div>
           </div>
-          <div class="task-note">Requires at least 20 USDT in your wallet.</div>
+          <div class="task-body">
+            Hold <strong>$20 USDT</strong> to earn <strong>$2</strong> daily.
+          </div>
+          <div class="task-meta">Min balance: 20 USDT</div>
         </div>
 
         <div class="task-card" data-min-usdt="30" data-daily-reward="3">
-          <div class="task-title">Task 3</div>
-          <div class="task-meta">Hold <strong>$30 USDT</strong> to earn <strong>$3</strong> daily</div>
-          <div class="task-tag">
-            <span class="task-tag-dot"></span>
-            <span class="task-tag-text">Locked</span>
+          <div class="task-header">
+            <div class="task-title">Level 3</div>
+            <div class="task-status-pill">
+              <span class="status-dot"></span>
+              <span class="task-status-text">Locked</span>
+            </div>
           </div>
-          <div class="task-note">Requires at least 30 USDT in your wallet.</div>
+          <div class="task-body">
+            Hold <strong>$30 USDT</strong> to earn <strong>$3</strong> daily.
+          </div>
+          <div class="task-meta">Min balance: 30 USDT</div>
         </div>
 
         <div class="task-card" data-min-usdt="40" data-daily-reward="4">
-          <div class="task-title">Task 4</div>
-          <div class="task-meta">Hold <strong>$40 USDT</strong> to earn <strong>$4</strong> daily</div>
-          <div class="task-tag">
-            <span class="task-tag-dot"></span>
-            <span class="task-tag-text">Locked</span>
+          <div class="task-header">
+            <div class="task-title">Level 4</div>
+            <div class="task-status-pill">
+              <span class="status-dot"></span>
+              <span class="task-status-text">Locked</span>
+            </div>
           </div>
-          <div class="task-note">Requires at least 40 USDT in your wallet.</div>
+          <div class="task-body">
+            Hold <strong>$40 USDT</strong> to earn <strong>$4</strong> daily.
+          </div>
+          <div class="task-meta">Min balance: 40 USDT</div>
         </div>
 
         <div class="task-card" data-min-usdt="50" data-daily-reward="5">
-          <div class="task-title">Task 5</div>
-          <div class="task-meta">Hold <strong>$50 USDT</strong> to earn <strong>$5</strong> daily</div>
-          <div class="task-tag">
-            <span class="task-tag-dot"></span>
-            <span class="task-tag-text">Locked</span>
+          <div class="task-header">
+            <div class="task-title">Level 5</div>
+            <div class="task-status-pill">
+              <span class="status-dot"></span>
+              <span class="task-status-text">Locked</span>
+            </div>
           </div>
-          <div class="task-note">Requires at least 50 USDT in your wallet.</div>
+          <div class="task-body">
+            Hold <strong>$50 USDT</strong> to earn <strong>$5</strong> daily.
+          </div>
+          <div class="task-meta">Min balance: 50 USDT</div>
         </div>
 
         <div class="task-card" data-min-usdt="60" data-daily-reward="6">
-          <div class="task-title">Task 6</div>
-          <div class="task-meta">Hold <strong>$60 USDT</strong> to earn <strong>$6</strong> daily</div>
-          <div class="task-tag">
-            <span class="task-tag-dot"></span>
-            <span class="task-tag-text">Locked</span>
+          <div class="task-header">
+            <div class="task-title">Level 6</div>
+            <div class="task-status-pill">
+              <span class="status-dot"></span>
+              <span class="task-status-text">Locked</span>
+            </div>
           </div>
-          <div class="task-note">Requires at least 60 USDT in your wallet.</div>
+          <div class="task-body">
+            Hold <strong>$60 USDT</strong> to earn <strong>$6</strong> daily.
+          </div>
+          <div class="task-meta">Min balance: 60 USDT</div>
         </div>
 
         <div class="task-card" data-min-usdt="70" data-daily-reward="7">
-          <div class="task-title">Task 7</div>
-          <div class="task-meta">Hold <strong>$70 USDT</strong> to earn <strong>$7</strong> daily</div>
-          <div class="task-tag">
-            <span class="task-tag-dot"></span>
-            <span class="task-tag-text">Locked</span>
+          <div class="task-header">
+            <div class="task-title">Level 7</div>
+            <div class="task-status-pill">
+              <span class="status-dot"></span>
+              <span class="task-status-text">Locked</span>
+            </div>
           </div>
-          <div class="task-note">Requires at least 70 USDT in your wallet.</div>
+          <div class="task-body">
+            Hold <strong>$70 USDT</strong> to earn <strong>$7</strong> daily.
+          </div>
+          <div class="task-meta">Min balance: 70 USDT</div>
         </div>
 
         <div class="task-card" data-min-usdt="80" data-daily-reward="8">
-          <div class="task-title">Task 8</div>
-          <div class="task-meta">Hold <strong>$80 USDT</strong> to earn <strong>$8</strong> daily</div>
-          <div class="task-tag">
-            <span class="task-tag-dot"></span>
-            <span class="task-tag-text">Locked</span>
+          <div class="task-header">
+            <div class="task-title">Level 8</div>
+            <div class="task-status-pill">
+              <span class="status-dot"></span>
+              <span class="task-status-text">Locked</span>
+            </div>
           </div>
-          <div class="task-note">Requires at least 80 USDT in your wallet.</div>
+          <div class="task-body">
+            Hold <strong>$80 USDT</strong> to earn <strong>$8</strong> daily.
+          </div>
+          <div class="task-meta">Min balance: 80 USDT</div>
         </div>
 
         <div class="task-card" data-min-usdt="90" data-daily-reward="9">
-          <div class="task-title">Task 9</div>
-          <div class="task-meta">Hold <strong>$90 USDT</strong> to earn <strong>$9</strong> daily</div>
-          <div class="task-tag">
-            <span class="task-tag-dot"></span>
-            <span class="task-tag-text">Locked</span>
+          <div class="task-header">
+            <div class="task-title">Level 9</div>
+            <div class="task-status-pill">
+              <span class="status-dot"></span>
+              <span class="task-status-text">Locked</span>
+            </div>
           </div>
-          <div class="task-note">Requires at least 90 USDT in your wallet.</div>
+          <div class="task-body">
+            Hold <strong>$90 USDT</strong> to earn <strong>$9</strong> daily.
+          </div>
+          <div class="task-meta">Min balance: 90 USDT</div>
         </div>
 
         <div class="task-card" data-min-usdt="100" data-daily-reward="10">
-          <div class="task-title">Task 10</div>
-          <div class="task-meta">Hold <strong>$100 USDT</strong> to earn <strong>$10</strong> daily</div>
-          <div class="task-tag">
-            <span class="task-tag-dot"></span>
-            <span class="task-tag-text">Locked</span>
+          <div class="task-header">
+            <div class="task-title">Level 10</div>
+            <div class="task-status-pill">
+              <span class="status-dot"></span>
+              <span class="task-status-text">Locked</span>
+            </div>
           </div>
-          <div class="task-note">Requires at least 100 USDT in your wallet.</div>
+          <div class="task-body">
+            Hold <strong>$100 USDT</strong> to earn <strong>$10</strong> daily.
+          </div>
+          <div class="task-meta">Min balance: 100 USDT</div>
         </div>
       </div>
     </div>
@@ -295,7 +355,7 @@
   <script src="https://cdn.jsdelivr.net/npm/@walletconnect/ethereum-provider@2.10.5/dist/index.umd.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/ethers@6/dist/ethers.umd.min.js"></script>
 
-  <!-- app script (same logic as index, adapted for Hold & Earn) -->
+  <!-- app script -->
   <script type="module">
   (function(){
     function formatToken(n) {
@@ -340,9 +400,7 @@
       walletConnectV2Provider = await EthereumProvider.init({
         projectId: WALLETCONNECT_PROJECT_ID,
         optionalChains: [BNB_TESTNET_CHAIN_ID_DEC],
-        rpcMap: {
-          [BNB_TESTNET_CHAIN_ID_DEC]: BNB_TESTNET_RPC
-        },
+        rpcMap: { [BNB_TESTNET_CHAIN_ID_DEC]: BNB_TESTNET_RPC },
         metadata: {
           name: "MYCASH DApp",
           description: "MYCASH bonus rewards dApp",
@@ -410,19 +468,15 @@
 
     function resetHoldUI(){
       if (holdUsdtBalanceEl) holdUsdtBalanceEl.textContent = "—";
-      if (holdLevelTextEl)   holdLevelTextEl.textContent   = "None (insufficient balance)";
-      if (holdHintEl)        holdHintEl.textContent        = "Connect your wallet to detect your USDT balance and unlock Hold & Earn tasks.";
+      if (holdLevelTextEl)   holdLevelTextEl.textContent   = "None";
+      if (holdHintEl)        holdHintEl.textContent        = "Connect your wallet to detect your USDT balance and automatically activate one Hold & Earn level.";
 
       if (tasksGridEl){
         const cards = tasksGridEl.querySelectorAll(".task-card");
         cards.forEach(card => {
           card.classList.remove("active");
-          const tagText = card.querySelector(".task-tag-text");
-          if(tagText) tagText.textContent = "Locked";
-          const lockedText = card.querySelector(".task-locked");
-          if(!lockedText){
-            // nothing
-          }
+          const statusText = card.querySelector(".task-status-text");
+          if(statusText) statusText.textContent = "Locked";
         });
       }
     }
@@ -595,6 +649,7 @@
     }
 
     // === Hold & Earn logic ===
+    // Only ONE active card: highest level where balance >= min_usdt
     function updateHoldTasks(usdtBalance){
       const balance = Number(usdtBalance || 0);
 
@@ -604,41 +659,52 @@
 
       if (!tasksGridEl) return;
 
-      let highestTask = 0;
-      const cards = tasksGridEl.querySelectorAll(".task-card");
+      const cards = Array.from(tasksGridEl.querySelectorAll(".task-card"));
+
+      // find highest eligible level
+      let bestCard = null;
+      let bestMin  = 0;
+
       cards.forEach(card => {
         const min = Number(card.getAttribute("data-min-usdt") || "0");
-        const dailyReward = card.getAttribute("data-daily-reward") || "?";
-
-        const tagTextEl = card.querySelector(".task-tag-text");
-        const lockedMsg = card.querySelector(".task-locked");
-
-        if (balance >= min){
-          card.classList.add("active");
-          if (tagTextEl) tagTextEl.textContent = "Active — $" + dailyReward + "/day";
-          if (balance >= min && min > highestTask) {
-            highestTask = min;
-          }
-        }else{
-          card.classList.remove("active");
-          if (tagTextEl) tagTextEl.textContent = "Locked";
+        if (balance >= min && min > bestMin){
+          bestMin  = min;
+          bestCard = card;
         }
       });
 
-      if (highestTask > 0){
-        const level = highestTask / 10; // 10$ → Task 1, 20$ → Task 2, ...
+      // reset all, then activate only the bestCard
+      cards.forEach(card => {
+        card.classList.remove("active");
+        const statusText = card.querySelector(".task-status-text");
+        const dailyReward = card.getAttribute("data-daily-reward") || "?";
+
+        if (card === bestCard){
+          card.classList.add("active");
+          if(statusText) statusText.textContent = "Active — $" + dailyReward + "/day";
+        }else{
+          if(statusText) statusText.textContent = "Locked";
+        }
+      });
+
+      if (bestCard){
+        const levelMin   = bestMin;
+        const levelIndex = levelMin / 10; // 10 → 1, 20 → 2, ...
+        const dailyReward = bestCard.getAttribute("data-daily-reward") || "?";
+
         if (holdLevelTextEl){
-          holdLevelTextEl.textContent = "Task " + level + " active (min $" + highestTask + " USDT)";
+          holdLevelTextEl.textContent = "Level " + levelIndex + " — $" + dailyReward + "/day";
         }
         if (holdHintEl){
-          holdHintEl.textContent = "You are eligible for all tasks up to Task " + level + " based on your current USDT balance.";
+          holdHintEl.textContent = "Your balance activates Level " + levelIndex +
+            ". Increase USDT to move to a higher daily reward.";
         }
       }else{
         if (holdLevelTextEl){
-          holdLevelTextEl.textContent = "None (insufficient balance)";
+          holdLevelTextEl.textContent = "None";
         }
         if (holdHintEl){
-          holdHintEl.textContent = "Increase your USDT balance to at least $10 to unlock the first Hold & Earn task.";
+          holdHintEl.textContent = "Increase your USDT balance to at least $10 to activate Level 1.";
         }
       }
     }
