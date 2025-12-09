@@ -1,0 +1,594 @@
+<!doctype html>
+<html> 
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>DEMO — Rewards</title>
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+
+    body{
+      font-family:system-ui,Segoe UI,Arial;
+      background:#050816;
+      color:#e6eef8;
+      min-height:100vh;
+      display:flex;
+      flex-direction:column;
+    }
+
+    /* === HEADER & NAV (same structure as index) === */
+    header{
+      background:#071027;
+      padding:10px 16px;
+      position:sticky;
+      top:0;
+      z-index:20;
+      border-bottom:1px solid rgba(255,255,255,0.03);
+    }
+    .nav{
+      max-width:980px;
+      margin:0 auto;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:12px;
+    }
+    .nav-right{
+      display:flex;
+      align-items:center;
+      gap:10px;
+      flex-wrap:wrap;
+      justify-content:flex-end;
+    }
+
+    .nav-right a{
+      color:#dbeafe;
+      text-decoration:none;
+      padding:6px 10px;
+      border-radius:6px;
+      font-size:0.9rem;
+    }
+    .nav-right a:hover{
+      background:#0f1b33;
+    }
+
+    .connect{
+      background:#3b82f6;
+      color:#fff;
+      padding:8px 14px;
+      border-radius:999px;
+      border:0;
+      cursor:pointer;
+      font-size:0.9rem;
+      white-space:nowrap;
+    }
+    .connect.connected{
+      background:#15803d;
+    }
+
+    main{
+      max-width:980px;
+      margin:20px auto;
+      padding:16px;
+      flex:1;
+    }
+
+    /* small info line under header (User ID etc) */
+    .top-info{
+      margin-bottom:14px;
+      font-size:0.84rem;
+      color:#9fb0c8;
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px 18px;
+    }
+    .mono{font-family:ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono","Helvetica Neue", monospace;}
+
+    /* ===== REWARD PAGE ===== */
+    .reward-title{
+      text-align:center;
+      margin-bottom:1.5rem;
+    }
+    .reward-title h1{
+      font-size:1.9rem;
+      margin-bottom:0.4rem;
+    }
+    .reward-title p{
+      font-size:0.95rem;
+      color:#9ca3af;
+    }
+
+    .reward-card{
+      border-radius:1.5rem;
+      padding:1.4rem 1.6rem;
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:1.4rem;
+      border:1px solid rgba(148,163,184,0.35);
+      box-shadow:0 20px 45px rgba(15,23,42,0.9);
+      background:radial-gradient(circle at top left,#111827,#020617);
+    }
+
+    .reward-left,
+    .reward-center,
+    .reward-right{
+      display:flex;
+      flex-direction:column;
+      justify-content:center;
+    }
+
+    .reward-left{
+      min-width:150px;
+      gap:0.4rem;
+    }
+
+    .reward-tag{
+      font-size:0.7rem;
+      text-transform:uppercase;
+      letter-spacing:0.18em;
+      color:#64748b;
+      margin-bottom:6px;
+    }
+
+    .wallet-icon-base{
+      width:54px;
+      height:54px;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      overflow:hidden;
+      background:#020617;
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,0.6);
+      background:radial-gradient(circle at 20% 0,#1d4ed8,#020617);
+    }
+    .wallet-icon-base img{
+      width:70%;
+      height:70%;
+      object-fit:contain;
+      display:block;
+    }
+
+    .wallet-subline{
+      font-size:0.8rem;
+      color:#9fb0c8;
+    }
+
+    .reward-center{
+      flex:1;
+      align-items:center;
+      text-align:center;
+      gap:0.35rem;
+    }
+
+    .reward-amount{
+      font-size:2.1rem;
+      font-weight:700;
+      letter-spacing:0.05em;
+    }
+
+    .reward-label{
+      font-size:0.86rem;
+      text-transform:uppercase;
+      color:#9ca3af;
+      letter-spacing:0.23em;
+    }
+
+    .reward-desc{
+      margin-top:2px;
+      font-size:0.82rem;
+      color:#9fb0c8;
+      max-width:370px;
+    }
+
+    .connected-pill{
+      margin-top:6px;
+      padding:4px 12px;
+      border-radius:999px;
+      font-size:0.8rem;
+      background:rgba(34,197,94,0.15);
+      border:1px solid rgba(34,197,94,0.7);
+      color:#bbf7d0;
+      display:inline-flex;
+      align-items:center;
+      gap:6px;
+    }
+    .connected-pill::before{
+      content:"";
+      width:6px;
+      height:6px;
+      border-radius:999px;
+      background:#22c55e;
+    }
+
+    .btn{
+      border:none;
+      outline:none;
+      border-radius:999px;
+      padding:0.55rem 1.8rem;
+      font-size:0.9rem;
+      font-weight:600;
+      cursor:pointer;
+      transition:transform 0.12s ease, box-shadow 0.12s ease, background 0.15s ease, opacity 0.12s ease;
+      display:inline-flex;
+      align-items:center;
+      justify-content:center;
+      white-space:nowrap;
+    }
+
+    .btn-claim{
+      background:#22c55e;
+      color:#022c22;
+      box-shadow:0 14px 30px rgba(34,197,94,0.45);
+      margin-top:0.7rem;
+    }
+    .btn-claim:hover:not([disabled]){
+      transform:translateY(-1px);
+      box-shadow:0 18px 40px rgba(34,197,94,0.6);
+    }
+
+    .btn-task{
+      margin-top:0.45rem;
+      background:transparent;
+      border:1px solid rgba(148,163,184,0.8);
+      color:#e5e7eb;
+      font-size:0.86rem;
+      padding-inline:1.4rem;
+    }
+    .btn-task:hover{
+      background:rgba(15,23,42,0.9);
+      box-shadow:0 10px 26px rgba(15,23,42,0.8);
+      transform:translateY(-1px);
+    }
+
+    .btn[disabled]{
+      opacity:0.45;
+      cursor:not-allowed;
+      box-shadow:none;
+      transform:none;
+    }
+
+    .reward-right{
+      min-width:170px;
+      align-items:flex-end;
+      gap:0.4rem;
+    }
+
+    .small{font-size:0.85rem;color:#9fb0c8;}
+
+    .reward-extra{
+      margin-top:18px;
+      font-size:0.85rem;
+      color:#9fb0c8;
+    }
+
+    /* ===== TASK PAGE (same header/footer, just different content) ===== */
+    #taskPage{display:none;}
+
+    .task-header-row{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      gap:10px;
+      margin-bottom:16px;
+    }
+    .task-header-row h2{
+      font-size:1.4rem;
+    }
+    .btn-back{
+      border-radius:999px;
+      border:1px solid rgba(148,163,184,0.7);
+      background:transparent;
+      color:#e5e7eb;
+      font-size:0.85rem;
+      padding:0.4rem 1.2rem;
+      cursor:pointer;
+    }
+    .btn-back:hover{
+      background:#111827;
+    }
+
+    .task-section{
+      margin-top:18px;
+      padding:1rem 1.1rem;
+      border-radius:0.9rem;
+      border:1px solid rgba(75,85,99,0.7);
+      background:linear-gradient(135deg,#020617,#020617,#0b1120);
+    }
+    .task-section h3{
+      font-size:1rem;
+      margin-bottom:0.35rem;
+    }
+    .task-section p{
+      font-size:0.86rem;
+      color:#cbd5f5;
+      margin-bottom:0.35rem;
+    }
+    .task-section ul{
+      margin-left:1.2rem;
+      margin-bottom:0.35rem;
+      font-size:0.86rem;
+      color:#cbd5f5;
+    }
+    .task-section li{
+      margin-bottom:0.18rem;
+    }
+
+    .video-wrapper{
+      position:relative;
+      width:100%;
+      max-width:640px;
+      margin-top:0.6rem;
+      margin-bottom:0.6rem;
+      padding-top:56.25%; /* 16:9 */
+      border-radius:0.75rem;
+      overflow:hidden;
+      box-shadow:0 18px 38px rgba(15,23,42,0.9);
+      background:#020617;
+    }
+    .video-wrapper iframe{
+      position:absolute;
+      top:0;left:0;
+      width:100%;
+      height:100%;
+      border:0;
+    }
+
+    .task-actions{
+      margin-top:0.6rem;
+      display:flex;
+      flex-wrap:wrap;
+      gap:10px;
+      align-items:center;
+    }
+    .task-btn{
+      border-radius:999px;
+      border:none;
+      background:#22c55e;
+      color:#022c22;
+      font-size:0.9rem;
+      padding:0.45rem 1.4rem;
+      font-weight:600;
+      cursor:pointer;
+    }
+    .task-btn:hover{
+      box-shadow:0 14px 30px rgba(34,197,94,0.45);
+      transform:translateY(-1px);
+    }
+
+    .task-check{
+      font-size:0.84rem;
+    }
+    .task-check.ok{
+      color:#22c55e;
+    }
+    .task-check.bad{
+      color:#f97316;
+    }
+
+    footer{
+      max-width:980px;
+      margin:24px auto 16px auto;
+      padding:12px;
+      color:#9fb0c8;
+      text-align:center;
+      font-size:0.8rem;
+    }
+
+    /* Reward layout responsive */
+    @media(max-width:768px){
+      .reward-card{
+        flex-direction:column;
+        align-items:stretch;
+        text-align:center;
+      }
+      .reward-left{
+        align-items:center;
+      }
+      .reward-right{
+        align-items:center;
+      }
+    }
+
+    /* Header mobile cleanup (match index) */
+    @media (max-width: 640px){
+      header{
+        padding:8px 10px;
+      }
+
+      .nav{
+        max-width:100%;
+        flex-direction:column;
+        align-items:stretch;
+        justify-content:flex-start;
+        gap:6px;
+      }
+
+      .logo{
+        width:100%;
+        text-align:center;
+        font-size:0.9rem;
+        letter-spacing:3px;
+      }
+      .nav-right{
+        width:100%;
+        justify-content:center;
+        gap:6px;
+      }
+
+      .nav-right a{
+        padding:4px 8px;
+        font-size:0.85rem;
+      }
+      header .connect{
+        width:100%;
+        max-width:260px;
+        padding:8px 12px;
+        font-size:0.9rem;
+      }
+
+      header{
+        background:#071027;
+        padding:10px 16px;
+        position:sticky;
+        top:0;
+        z-index:20;
+        border-bottom:1px solid rgba(255,255,255,0.03);
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- React root for Vite (hidden, UI is pure HTML) -->
+  <div id="root" style="display:none;"></div>
+
+  <header>
+    <div class="nav">
+      <div class="logo">DEMO</div>
+      <div class="nav-right">
+        <a href="home.html">Wallet</a>
+        <a href="home.html">Task</a>
+        <a href="hold-earn.html">Earn</a>
+        <button id="connectBtn" class="connect">Connect Wallet</button>
+      </div>
+    </div>
+  </header>
+
+  <main>
+    <!-- Top info bar (User ID, address, etc.) -->
+    <div class="top-info">
+      <div>Status: <span id="statusText">Not connected</span></div>
+      <div>Address: <span id="walletAddress" class="mono">—</span></div>
+      <div>Network: <span id="walletNetwork">—</span></div>
+      <div>User ID: <span id="userId" class="mono">-</span></div>
+    </div>
+
+    <!-- === REWARD PAGE VIEW === -->
+    <div id="rewardPage">
+      <div class="reward-title">
+        <h1>Claim Your Rewards</h1>
+        <p>Connect your BSC wallet once, then use the reward card below to claim.</p>
+      </div>
+
+      <div class="reward-card">
+        <div class="reward-left">
+          <div class="reward-tag">Reward #1</div>
+          <div class="wallet-icon-base">
+            <img src="logo.png" alt="Trust Wallet">
+          </div>
+          <span class="wallet-subline">Trust Wallet • BSC</span>
+        </div>
+
+        <div class="reward-center">
+          <div class="reward-amount" id="rewardAmountDisplay">$10</div>
+          <div class="reward-label">Starter Bonus</div>
+          <div class="reward-desc">
+            First time connection reward for eligible wallets.
+          </div>
+          <button id="claimBtn" class="btn btn-claim" disabled>Claim</button>
+          <button id="taskBtn" class="btn btn-task">View Tasks</button> 
+
+
+          
+          <div class="small" id="claimHint" style="margin-top:4px;">
+            Claim is locked until wallet is connected and all tasks are completed.
+          </div>
+        </div>
+        
+<button id="connectBtnCard" class="connect">Connect Wallet</button> 
+        
+
+      </div>
+   </div>     
+
+
+    
+
+    <!-- === TASK PAGE VIEW (same header/footer, different content) === -->
+    <div id="taskPage">
+      <div class="task-header-row">
+        <div>
+          <h2>Reward Tasks</h2>
+          <p class="small">Complete these tasks to become eligible for the Starter Bonus.</p>
+        </div>
+        <button id="backToRewardsBtn" class="btn-back">Back to Reward</button>
+      </div>
+
+      <!-- Task 1: video -->
+      <div class="task-section">
+        <h3>Task 1 — Watch the Intro Video</h3>
+        <p>
+          Watch this video to understand how MYCASH and the reward system works.
+        </p>
+        <div class="video-wrapper">
+          <!-- Replace src with your own embedded video later -->
+          <iframe
+            src="https://www.youtube.com/embed/dQw4w9WgXcQ"
+            title="MYCASH Intro"
+            allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+            allowfullscreen
+          ></iframe>
+        </div>
+        <div class="task-actions">
+          <button id="task1Btn" class="task-btn">Mark as watched (demo)</button>
+          <span id="task1Check" class="task-check bad">❌ Not completed</span>
+        </div>
+      </div>
+
+      <!-- Task 2: wallet balance checker -->
+      <div class="task-section">
+        <h3>Task 2 — Wallet Balance Check</h3>
+        <p>
+          This task checks if your connected wallet holds at least
+          <strong>10 USDT (BEP-20)</strong>. 
+        </p>
+        <ul>
+          <li>Connect your BSC wallet using the button in the header.</li>
+          <li>Make sure you hold at least 10 USDT at the token address configured.</li>
+          <li>Click “Check wallet” to test eligibility.</li>
+        </ul>
+        <div class="task-actions">
+          <button id="task2CheckBtn" class="task-btn">Check wallet (demo)</button>
+          <span id="task2Check" class="task-check bad">❌ Not checked</span>
+        </div>
+        <p class="small" id="task2Detail" style="margin-top:4px;">
+          Status: waiting for check.
+        </p>
+      </div>
+
+      <!-- Task 3: custom action -->
+      <div class="task-section">
+        <h3>Task 3 — Custom Action</h3>
+        <p>
+          i will add DOWNLOAD APP/ LIKE THE PAGE / FOLLOW ON INSTRAGRAM 
+        </p>
+        <ul>
+          <li>Example: Join the official Telegram or Discord.</li>
+          <li>Example: Submit a simple form with their User ID.</li>
+          <li>Example: Perform one on-chain transaction via MYCASH.</li>
+        </ul>
+        <div class="task-actions">
+          <button id="task3Btn" class="task-btn">Mark as done (demo)</button>
+          <span id="task3Check" class="task-check bad">❌ Not completed</span>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- FOOTER (same structure as index) -->
+  <footer>
+    © <span id="year"></span> MYCASH — BSC (BEP-20) • No private keys stored.
+  </footer>
+
+  <!-- libs: Web3 + Ethers -->
+  <script src="https://unpkg.com/web3@1.2.11/dist/web3.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/ethers@6/dist/ethers.umd.min.js"></script>
+
+  <!-- Vite / React entry: this runs src/main.jsx (and appkit.ts) -->
+  <script type="module" src="/src/main.jsx"></script>
+
+  <!-- app script (same logic, AppKit-based connect) -->
+  <script type="module" src="./src/inline.js"></script>
+</body>
+</html>
